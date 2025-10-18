@@ -208,7 +208,7 @@ const Hero = () => (
               <a href={JUP_URL} target="_blank" rel="noreferrer">Buy Now</a>
             </Button>
             <Button variant="secondary" className="rounded-2xl text-sm sm:text-base h-11 sm:h-12 px-6 sm:px-8" asChild>
-              <a href="#token">View Tokenomics</a>
+              <a href="https://dexscreener.com/solana/6l6fmzmd8uvbybxdpumzkn3ygzhjm28t1zh41fal3wtm">DEXScreener</a>
             </Button>
           </div>
           <div className="mt-6 flex items-center justify-center lg:justify-start gap-4 text-sm text-white/80 flex-wrap">
