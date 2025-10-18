@@ -13,7 +13,7 @@ const JUP_URL = `https://jup.ag/swap/SOL-${CA}`; // Open swap with SOL -> BOOBOY
 const DEX_URL = `https://dexscreener.com/solana/${CA}`;
 const X_URL = "https://x.com/Hodlposse";
 const TG_URL = "https://t.me/hodlpossearmy";
-const WEBSITE = "BooBoy.fun"; // display only
+const WEBSITE = "BooBoy.live"; // display only
 
 // Your meme images
 const STATIC_MEMES = [
