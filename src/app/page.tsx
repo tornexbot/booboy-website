@@ -305,13 +305,13 @@ const About = () => (
         <Card className="bg-black/40 border-white/10">
           <CardContent className="p-4 sm:p-5">
             <h3 className="font-bold text-sm sm:text-base">Responsive</h3>
-            <p className="text-xs sm:text-sm text-white/70 mt-1">Best Hallowen Vibes</p>
+            <p className="text-xs sm:text-sm text-white/70 mt-1">Filled with mysterious Halloween magic.</p>
           </CardContent>
         </Card>
         <Card className="bg-black/40 border-white/10">
           <CardContent className="p-4 sm:p-5">
             <h3 className="font-bold text-sm sm:text-base">Fast</h3>
-            <p className="text-xs sm:text-sm text-white/70 mt-1"> quick loading.</p>
+            <p className="text-xs sm:text-sm text-white/70 mt-1">Quick as a midnight fright.</p>
           </CardContent>
         </Card>
         <Card className="bg-black/40 border-white/10">
