@@ -345,7 +345,7 @@ const HowToBuy = () => (
         },
         { 
           step: "Step 4: Swap SOL for BOOBOY",
-          instructions: `The token will be pre-selected! Just set your SOL amount and confirm the swap. No need to paste any contract address.`
+          instructions: `Set SOL as your input and paste our contract address: ${CA} as the output token. Review the swap details and confirm the transaction.`
         },
         { 
           step: "Step 5: Add to Your Wallet",
@@ -484,7 +484,7 @@ export default function App() {
                 <div className="font-bold text-lg sm:text-xl" style={{ textShadow: glow("#ff7b00").textShadow }}>
                   Swap $BOO on Jupiter
                 </div>
-                <p className="text-white/70 text-sm mt-1">Token pre-selected! Just connect wallet and swap.</p>
+                <p className="text-white/70 text-sm mt-1">One click to the DEX—no wallet connect here.</p>
               </div>
               <div className="flex flex-wrap gap-2 sm:gap-3 items-center justify-center">
                 <Button asChild className="rounded-xl text-xs sm:text-sm h-9 sm:h-10 px-3 sm:px-4">
