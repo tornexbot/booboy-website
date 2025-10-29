@@ -8,7 +8,7 @@ import { Menu, Ghost, Copy, Check, ExternalLink } from "lucide-react";
 import Image from "next/image";
 
 // ---- Config (edit these safely)
-const CA = "e6J7t6ZxbU3L77gc1bRJHvM41oNMP8C9DhCXaYapump"; // BOOBOY contract address (Solana)
+const CA = "GvaqCBjYsFhsoRSpHzPfU5XoR8be2KdkJD4bc5d2pump"; // BOOBOY contract address (Solana)
 const JUP_URL = `https://jup.ag/swap/SOL-${CA}`; // Open swap with SOL -> BOOBOY
 const DEX_URL = `https://dexscreener.com/solana/${CA}`;
 const X_URL = "https://x.com/Hodlposse";
