@@ -9,7 +9,7 @@ import Image from "next/image";
 
 // ---- Config (edit these safely)
 const CA = "GvaqCBjYsFhsoRSpHzPfU5XoR8be2KdkJD4bc5d2pump"; // BOOBOY contract address (Solana)
-const JUP_URL = `https://jup.ag/swap/SOL-${CA}`; // Open swap with SOL -> BOOBOY
+const JUP_URL = `https://jup.ag/swap/SOL-${CA}?inputCurrency=SOL&outputCurrency=${CA}`; // Pre-filled swap
 const DEX_URL = `https://dexscreener.com/solana/${CA}`;
 const X_URL = "https://x.com/Hodlposse";
 const TG_URL = "https://t.me/hodlpossearmy";
@@ -208,7 +208,7 @@ const Hero = () => (
               <a href={JUP_URL} target="_blank" rel="noreferrer">Buy Now</a>
             </Button>
             <Button variant="secondary" className="rounded-2xl text-sm sm:text-base h-11 sm:h-12 px-6 sm:px-8" asChild>
-              <a href="https://dexscreener.com/solana/6l6fmzmd8uvbybxdpumzkn3ygzhjm28t1zh41fal3wtm">DEXScreener</a>
+              <a href={DEX_URL} target="_blank" rel="noreferrer">DEXScreener</a>
             </Button>
           </div>
           <div className="mt-6 flex items-center justify-center lg:justify-start gap-4 text-sm text-white/80 flex-wrap">
@@ -329,7 +329,7 @@ const HowToBuy = () => (
   <Section id="howtobuy" className="py-12 sm:py-16 md:py-20 lg:py-24">
     <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-center">HOW TO BUY $BOO</h2>
     <p className="text-white/70 mt-2 text-center text-sm sm:text-base">Follow these simple steps to join the BOOBOY community</p>
-    <div className="mt-6 sm:mt-8 grid gap-4 sm:gap-6 max-w-4xl mx-auto">Lightning
+    <div className="mt-6 sm:mt-8 grid gap-4 sm:gap-6 max-w-4xl mx-auto">
       {[ 
         { 
           step: "Step 1: Get a Solana Wallet",
@@ -345,7 +345,7 @@ const HowToBuy = () => (
         },
         { 
           step: "Step 4: Swap SOL for BOOBOY",
-          instructions: `Set SOL as your input and paste our contract address: ${CA} as the output token. Review the swap details and confirm the transaction.`
+          instructions: `The token will be pre-selected! Just set your SOL amount and confirm the swap. No need to paste any contract address.`
         },
         { 
           step: "Step 5: Add to Your Wallet",
@@ -484,7 +484,7 @@ export default function App() {
                 <div className="font-bold text-lg sm:text-xl" style={{ textShadow: glow("#ff7b00").textShadow }}>
                   Swap $BOO on Jupiter
                 </div>
-                <p className="text-white/70 text-sm mt-1">One click to the DEX—no wallet connect here.</p>
+                <p className="text-white/70 text-sm mt-1">Token pre-selected! Just connect wallet and swap.</p>
               </div>
               <div className="flex flex-wrap gap-2 sm:gap-3 items-center justify-center">
                 <Button asChild className="rounded-xl text-xs sm:text-sm h-9 sm:h-10 px-3 sm:px-4">
