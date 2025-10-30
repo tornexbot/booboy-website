@@ -11,8 +11,8 @@ import Image from "next/image";
 const CA = "GvaqCBjYsFhsoRSpHzPfU5XoR8be2KdkJD4bc5d2pump"; // BOOBOY contract address (Solana)
 const JUP_URL = `https://jup.ag/swap/SOL-${CA}`; // Correct Jupiter format
 const DEX_URL = `https://dexscreener.com/solana/${CA}`;
-const X_URL = "https://x.com/Hodlposse";
-const TG_URL = "https://t.me/hodlpossearmy";
+const X_URL = "";
+const TG_URL = "https://t.me/booboyarmy";
 const WEBSITE = "BooBoy.live"; // display only
 
 // Your meme images
