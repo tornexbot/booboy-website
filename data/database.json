@@ -1,0 +1,21 @@
+{
+  "testimonials": [
+    {
+      "name": "Jerry",
+      "message": "5 stars really massive",
+      "rating": 5,
+      "date": "2025-10-30",
+      "verified": true,
+      "id": 1761786105951
+    }
+  ],
+  "giveaways": [
+    {
+      "name": "Jerry",
+      "prize": "1M Boo",
+      "date": "2025-11-10",
+      "tx": "1234",
+      "id": 1761786265600
+    }
+  ]
+}
