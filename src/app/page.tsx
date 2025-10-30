@@ -1,22 +1,19 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Menu, Ghost, Copy, Check, ExternalLink, ShoppingBag, Trophy, Users, Star, MessageCircle, Send, Settings, Trash2, Edit, Plus, X, Lock, Video, ChevronLeft, ChevronRight } from "lucide-react";
+import { Menu, Ghost, Copy, Check, ExternalLink } from "lucide-react";
 import Image from "next/image";
 
 // ---- Config (edit these safely)
-const CA = "GvaqCBjYsFhsoRSpHzPfU5XoR8be2KdkJD4bc5d2pump";
-const JUP_URL = `https://jup.ag/swap/SOL-${CA}`;
+const CA = "GvaqCBjYsFhsoRSpHzPfU5XoR8be2KdkJD4bc5d2pump"; // BOOBOY contract address (Solana)
+const JUP_URL = `https://jup.ag/swap/SOL-${CA}`; // Correct Jupiter format
 const DEX_URL = `https://dexscreener.com/solana/${CA}`;
 const X_URL = "https://x.com/Hodlposse";
 const TG_URL = "https://t.me/hodlpossearmy";
-const MERCH_URL = "#";
-
-// Developer Access Configuration
-const DEVELOPER_ACCESS_KEY = "booboy2024";
+const WEBSITE = "BooBoy.live"; // display only
 
 // Your meme images
 const STATIC_MEMES = [
@@ -32,28 +29,16 @@ const STATIC_MEMES = [
   "https://i.ibb.co/TM7S5MCF/photo-2025-10-18-22-57-07.jpg"
 ];
 
-// Video memes - fixed paths for Next.js public folder
-const VIDEO_MEMES = [
-  "/videos/1.mp4",
-  "/videos/2.mp4", 
-  "/videos/3.mp4",
-  "/videos/4.mp4",
-  "/videos/5.mp4",
-  "/videos/6.mp4",
-  "/videos/7.mp4",
-  "/videos/8.mp4",
-  "/videos/9.mp4",
-  "/videos/10.mp4",
-  "/videos/11.mp4",
-  "/videos/12.mp4",
-  "/videos/13.mp4"
-];
-
+// Hero image
 const HERO_IMAGE = "https://i.ibb.co/tPHdjHZd/photo-2025-10-18-22-56-34.jpg";
+
+// Slider behavior
 const MEME_AUTOPLAY_MS = 4000;
 
+// Small helper to create a subtle neon text glow
 const glow = (color = "#ff3b3b") => ({ textShadow: `0 0 6px ${color}, 0 0 12px ${color}` });
 
+// Type definitions
 interface SectionProps {
   id?: string;
   children: React.ReactNode;
@@ -64,223 +49,9 @@ interface CopyButtonProps {
   text: string;
 }
 
-interface Testimonial {
-  id: number;
-  name: string;
-  message: string;
-  rating: number;
-  date: string;
-  verified: boolean;
-}
-
-interface TestimonialFormData {
-  name: string;
-  message: string;
-  rating: number;
-}
-
-interface GiveawayWinner {
-  id: number;
-  name: string;
-  prize: string;
-  date: string;
-  tx: string;
-}
-
-interface GiveawayFormData {
-  name: string;
-  prize: string;
-  date: string;
-  tx: string;
-}
-
-// =============================================
-// API DATABASE SOLUTION
-// =============================================
-
-class ApiDatabase {
-  private static instance: ApiDatabase;
-  private listeners: (() => void)[] = [];
-
-  static getInstance(): ApiDatabase {
-    if (!ApiDatabase.instance) {
-      ApiDatabase.instance = new ApiDatabase();
-    }
-    return ApiDatabase.instance;
-  }
-
-  private notifyListeners() {
-    this.listeners.forEach(listener => listener());
-  }
-
-  subscribe(listener: () => void) {
-    this.listeners.push(listener);
-    return () => {
-      this.listeners = this.listeners.filter(l => l !== listener);
-    };
-  }
-
-  async getTestimonials(): Promise<Testimonial[]> {
-    try {
-      const response = await fetch('/api/testimonials', {
-        cache: 'no-store'
-      });
-      if (!response.ok) throw new Error('Failed to fetch testimonials');
-      return await response.json();
-    } catch (error) {
-      console.error('Error fetching testimonials:', error);
-      return [];
-    }
-  }
-
-  async addTestimonial(testimonial: Omit<Testimonial, 'id'>): Promise<Testimonial> {
-    try {
-      const response = await fetch('/api/testimonials', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(testimonial),
-      });
-      
-      if (!response.ok) throw new Error('Failed to add testimonial');
-      
-      const newTestimonial = await response.json();
-      this.notifyListeners();
-      return newTestimonial;
-    } catch (error) {
-      console.error('Error adding testimonial:', error);
-      throw error;
-    }
-  }
-
-  async updateTestimonial(id: number, updates: Partial<Testimonial>): Promise<boolean> {
-    try {
-      const response = await fetch(`/api/testimonials/${id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(updates),
-      });
-      
-      if (!response.ok) throw new Error('Failed to update testimonial');
-      
-      this.notifyListeners();
-      return true;
-    } catch (error) {
-      console.error('Error updating testimonial:', error);
-      return false;
-    }
-  }
-
-  async deleteTestimonial(id: number): Promise<boolean> {
-    try {
-      const response = await fetch(`/api/testimonials/${id}`, {
-        method: 'DELETE',
-      });
-      
-      if (!response.ok) throw new Error('Failed to delete testimonial');
-      
-      this.notifyListeners();
-      return true;
-    } catch (error) {
-      console.error('Error deleting testimonial:', error);
-      return false;
-    }
-  }
-
-  async getGiveaways(): Promise<GiveawayWinner[]> {
-    try {
-      const response = await fetch('/api/giveaways', {
-        cache: 'no-store'
-      });
-      if (!response.ok) throw new Error('Failed to fetch giveaways');
-      return await response.json();
-    } catch (error) {
-      console.error('Error fetching giveaways:', error);
-      return [];
-    }
-  }
-
-  async addGiveaway(giveaway: Omit<GiveawayWinner, 'id'>): Promise<GiveawayWinner> {
-    try {
-      const response = await fetch('/api/giveaways', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(giveaway),
-      });
-      
-      if (!response.ok) throw new Error('Failed to add giveaway');
-      
-      const newGiveaway = await response.json();
-      this.notifyListeners();
-      return newGiveaway;
-    } catch (error) {
-      console.error('Error adding giveaway:', error);
-      throw error;
-    }
-  }
-
-  async updateGiveaway(id: number, updates: Partial<GiveawayWinner>): Promise<boolean> {
-    try {
-      const response = await fetch(`/api/giveaways/${id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(updates),
-      });
-      
-      if (!response.ok) throw new Error('Failed to update giveaway');
-      
-      this.notifyListeners();
-      return true;
-    } catch (error) {
-      console.error('Error updating giveaway:', error);
-      return false;
-    }
-  }
-
-  async deleteGiveaway(id: number): Promise<boolean> {
-    try {
-      const response = await fetch(`/api/giveaways/${id}`, {
-        method: 'DELETE',
-      });
-      
-      if (!response.ok) throw new Error('Failed to delete giveaway');
-      
-      this.notifyListeners();
-      return true;
-    } catch (error) {
-      console.error('Error deleting giveaway:', error);
-      return false;
-    }
-  }
-
-  async clearAllData(): Promise<boolean> {
-    try {
-      const testimonials = await this.getTestimonials();
-      const giveaways = await this.getGiveaways();
-      
-      // Delete all testimonials
-      for (const testimonial of testimonials) {
-        await this.deleteTestimonial(testimonial.id);
-      }
-      
-      // Delete all giveaways
-      for (const giveaway of giveaways) {
-        await this.deleteGiveaway(giveaway.id);
-      }
-      
-      return true;
-    } catch (error) {
-      console.error('Error clearing data:', error);
-      return false;
-    }
-  }
+interface StatProps {
+  label: string;
+  value: string;
 }
 
 const Section = ({ id, children, className = "" }: SectionProps) => (
@@ -289,6 +60,25 @@ const Section = ({ id, children, className = "" }: SectionProps) => (
   </section>
 );
 
+// ---- Image selection helper
+const getHeroImage = (): string => {
+  if (typeof window === "undefined") return HERO_IMAGE;
+  
+  try { 
+    const p = new URLSearchParams(window.location.search); 
+    const u = p.get("img"); 
+    if (u) return u; 
+  } catch {}
+  
+  try { 
+    const ls = localStorage.getItem("booboy_img"); 
+    if (ls) return ls; 
+  } catch {}
+  
+  return HERO_IMAGE;
+};
+
+// ---- Copy button for contract address
 const CopyButton = ({ text }: CopyButtonProps) => {
   const [status, setStatus] = useState<"idle" | "copied" | "failed">("idle");
   
@@ -325,1467 +115,6 @@ const CopyButton = ({ text }: CopyButtonProps) => {
   );
 };
 
-const StarRating = ({ rating, onRatingChange, readonly = false }: { rating: number; onRatingChange?: (rating: number) => void; readonly?: boolean }) => {
-  return (
-    <div className="flex gap-1">
-      {[1, 2, 3, 4, 5].map((star) => (
-        <button
-          key={star}
-          type="button"
-          onClick={() => !readonly && onRatingChange?.(star)}
-          className={`${readonly ? 'cursor-default' : 'cursor-pointer hover:scale-110 transition-transform'} ${
-            star <= rating ? 'text-yellow-400' : 'text-gray-500'
-          }`}
-          disabled={readonly}
-        >
-          <Star className="h-4 w-4 sm:h-5 sm:w-5 fill-current" />
-        </button>
-      ))}
-    </div>
-  );
-};
-
-const VideoMemePlayer = ({ src, isActive }: { src: string; isActive: boolean }) => {
-  const videoRef = useRef<HTMLVideoElement>(null);
-
-  useEffect(() => {
-    if (videoRef.current) {
-      if (isActive) {
-        videoRef.current.play().catch(() => {
-          // Silent fail for autoplay restrictions
-        });
-      } else {
-        videoRef.current.pause();
-        videoRef.current.currentTime = 0;
-      }
-    }
-  }, [isActive, src]);
-
-  return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: isActive ? 1 : 0 }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: 0.5 }}
-      className="absolute inset-0 w-full h-full flex items-center justify-center"
-    >
-      <video
-        ref={videoRef}
-        src={src}
-        className="w-auto h-full max-w-full max-h-full object-contain rounded-2xl"
-        muted
-        loop
-        playsInline
-        preload="auto"
-        onError={(e) => {
-          console.error('Video loading error:', e);
-        }}
-      />
-      <div className="absolute bottom-2 right-2 bg-black/50 rounded-full p-1">
-        <Video className="h-4 w-4 text-white" />
-      </div>
-    </motion.div>
-  );
-};
-
-const MemeCarousel = () => {
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [activeType, setActiveType] = useState<"images" | "videos">("images");
-  
-  const allContent = activeType === "images" ? STATIC_MEMES : VIDEO_MEMES;
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentIndex((prev) => (prev + 1) % allContent.length);
-    }, MEME_AUTOPLAY_MS);
-
-    return () => clearInterval(timer);
-  }, [allContent.length, activeType]);
-
-  const nextSlide = () => {
-    setCurrentIndex((prev) => (prev + 1) % allContent.length);
-  };
-
-  const prevSlide = () => {
-    setCurrentIndex((prev) => (prev - 1 + allContent.length) % allContent.length);
-  };
-
-  return (
-    <Section id="memes" className="py-12 sm:py-16 md:py-20 lg:py-24">
-      <div className="text-center">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
-        >
-          <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold mb-8">Spooky Memes</h2>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6, delay: 0.1 }}
-          className="flex justify-center mb-6"
-        >
-          <div className="bg-black/40 rounded-2xl p-1 border border-white/10">
-            <button
-              onClick={() => {
-                setActiveType("images");
-                setCurrentIndex(0);
-              }}
-              className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${
-                activeType === "images" 
-                  ? "bg-orange-500 text-white" 
-                  : "text-white/70 hover:text-white"
-              }`}
-            >
-              Images ({STATIC_MEMES.length})
-            </button>
-            <button
-              onClick={() => {
-                setActiveType("videos");
-                setCurrentIndex(0);
-              }}
-              className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${
-                activeType === "videos" 
-                  ? "bg-orange-500 text-white" 
-                  : "text-white/70 hover:text-white"
-              }`}
-            >
-              Videos ({VIDEO_MEMES.length})
-            </button>
-          </div>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          whileInView={{ opacity: 1, scale: 1 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6, delay: 0.2 }}
-          className="relative h-64 sm:h-80 md:h-96 lg:h-[500px] rounded-2xl overflow-hidden border-4 border-white/10 bg-black"
-        >
-          <button
-            onClick={prevSlide}
-            className="absolute left-2 top-1/2 transform -translate-y-1/2 z-10 bg-black/50 hover:bg-black/70 text-white rounded-full p-2 transition-all"
-          >
-            <ChevronLeft className="h-5 w-5 sm:h-6 sm:w-6" />
-          </button>
-          
-          <button
-            onClick={nextSlide}
-            className="absolute right-2 top-1/2 transform -translate-y-1/2 z-10 bg-black/50 hover:bg-black/70 text-white rounded-full p-2 transition-all"
-          >
-            <ChevronRight className="h-5 w-5 sm:h-6 sm:w-6" />
-          </button>
-
-          <AnimatePresence mode="wait">
-            {activeType === "images" ? (
-              <motion.div
-                key={`image-${currentIndex}`}
-                className="absolute inset-0 w-full h-full flex items-center justify-center"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.5 }}
-              >
-                <Image
-                  src={allContent[currentIndex] as string}
-                  alt={`BOOBOY Meme ${currentIndex + 1}`}
-                  width={800}
-                  height={600}
-                  className="w-auto h-full max-w-full max-h-full object-contain"
-                  unoptimized
-                />
-              </motion.div>
-            ) : (
-              <VideoMemePlayer 
-                key={`video-${currentIndex}`}
-                src={allContent[currentIndex] as string}
-                isActive={true}
-              />
-            )}
-          </AnimatePresence>
-        </motion.div>
-
-        <div className="flex justify-center mt-6 gap-2">
-          {allContent.map((_, index) => (
-            <button
-              key={index}
-              onClick={() => setCurrentIndex(index)}
-              className={`w-3 h-3 rounded-full transition-all ${
-                index === currentIndex 
-                  ? activeType === "images" ? 'bg-orange-500 scale-125' : 'bg-purple-500 scale-125'
-                  : 'bg-white/30'
-              }`}
-            />
-          ))}
-        </div>
-      </div>
-    </Section>
-  );
-};
-
-// =============================================
-// HIDDEN DEVELOPER ACCESS SYSTEM
-// =============================================
-
-const DeveloperAccess = () => {
-  const [showAccessPanel, setShowAccessPanel] = useState(false);
-  const [accessKey, setAccessKey] = useState("");
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const secretTapCount = useRef(0);
-  const lastTapTime = useRef(0);
-
-  useEffect(() => {
-    const auth = localStorage.getItem('booboy_developer_authenticated');
-    if (auth === 'true') {
-      setIsAuthenticated(true);
-    }
-  }, []);
-
-  useEffect(() => {
-    const handleSecretTap = (e: MouseEvent) => {
-      const target = e.target as HTMLElement;
-      const isLogoClick = target.closest('header') !== null || 
-                         target.closest('a[href="#home"]') !== null ||
-                         target.closest('.font-black.tracking-wider') !== null;
-      
-      if (isLogoClick) {
-        const currentTime = Date.now();
-        if (currentTime - lastTapTime.current < 1000) {
-          secretTapCount.current++;
-          if (secretTapCount.current === 3) {
-            setShowAccessPanel(true);
-            secretTapCount.current = 0;
-          }
-        } else {
-          secretTapCount.current = 1;
-        }
-        lastTapTime.current = currentTime;
-        
-        setTimeout(() => {
-          secretTapCount.current = 0;
-        }, 2000);
-      }
-    };
-
-    const handleKeyPress = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'D' || e.key === 'd')) {
-        e.preventDefault();
-        setShowAccessPanel(true);
-      }
-      
-      if (e.key === 'Escape' && showAccessPanel) {
-        setShowAccessPanel(false);
-        setAccessKey('');
-      }
-    };
-
-    document.addEventListener('click', handleSecretTap);
-    window.addEventListener('keydown', handleKeyPress);
-    
-    return () => {
-      document.removeEventListener('click', handleSecretTap);
-      window.removeEventListener('keydown', handleKeyPress);
-    };
-  }, [showAccessPanel]);
-
-  const handleAccessSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (accessKey === DEVELOPER_ACCESS_KEY) {
-      localStorage.setItem('booboy_developer_authenticated', 'true');
-      setIsAuthenticated(true);
-      setShowAccessPanel(false);
-      setAccessKey('');
-    } else {
-      alert('Invalid access key');
-      setAccessKey('');
-    }
-  };
-
-  const handleLogout = () => {
-    localStorage.removeItem('booboy_developer_authenticated');
-    setIsAuthenticated(false);
-  };
-
-  if (isAuthenticated) {
-    return <AdminPanel onLogout={handleLogout} />;
-  }
-
-  return (
-    <>
-      <AnimatePresence>
-        {showAccessPanel && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/90 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-          >
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.9 }}
-              className="bg-[#1a1a1a] border border-orange-500/30 rounded-2xl p-6 w-full max-w-md mx-4"
-            >
-              <div className="text-center mb-6">
-                <div className="w-16 h-16 bg-gradient-to-r from-orange-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Lock className="h-8 w-8 text-white" />
-                </div>
-                <h2 className="text-2xl font-bold text-orange-400">Developer Access</h2>
-                <p className="text-white/60 mt-2 text-sm">Enter developer access key</p>
-              </div>
-
-              <form onSubmit={handleAccessSubmit} className="space-y-4">
-                <div>
-                  <input
-                    type="password"
-                    value={accessKey}
-                    onChange={(e) => setAccessKey(e.target.value)}
-                    className="w-full bg-white/5 border border-orange-500/30 rounded-xl px-4 py-3 text-white placeholder-white/50 focus:outline-none focus:border-orange-400 transition-colors text-center text-lg"
-                    placeholder="Enter access key"
-                    required
-                    autoFocus
-                  />
-                </div>
-
-                <div className="flex flex-col sm:flex-row gap-2">
-                  <Button
-                    type="submit"
-                    className="flex-1 bg-orange-500 hover:bg-orange-600 py-3 text-base"
-                  >
-                    <Lock className="h-4 w-4 mr-2" />
-                    Access Admin
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    onClick={() => {
-                      setShowAccessPanel(false);
-                      setAccessKey('');
-                    }}
-                    className="flex-1 py-3 text-base"
-                  >
-                    Cancel
-                  </Button>
-                </div>
-              </form>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </>
-  );
-};
-
-const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<"testimonials" | "giveaways">("testimonials");
-  const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
-  const [giveawayWinners, setGiveawayWinners] = useState<GiveawayWinner[]>([]);
-  const [showGiveawayForm, setShowGiveawayForm] = useState(false);
-  const [editingGiveaway, setEditingGiveaway] = useState<GiveawayWinner | null>(null);
-  const [giveawayFormData, setGiveawayFormData] = useState<GiveawayFormData>({
-    name: "",
-    prize: "",
-    date: "",
-    tx: ""
-  });
-
-  const db = ApiDatabase.getInstance();
-
-  useEffect(() => {
-    const loadData = async () => {
-      const testimonialsData = await db.getTestimonials();
-      const giveawaysData = await db.getGiveaways();
-      setTestimonials(testimonialsData);
-      setGiveawayWinners(giveawaysData);
-    };
-
-    loadData();
-
-    const unsubscribe = db.subscribe(() => {
-      loadData();
-    });
-
-    return unsubscribe;
-  }, [db]);
-
-  useEffect(() => {
-    const handleKeyPress = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'O' || e.key === 'o')) {
-        e.preventDefault();
-        setIsOpen(true);
-      }
-      
-      if (e.key === 'Escape' && isOpen) {
-        setIsOpen(false);
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyPress);
-    return () => window.removeEventListener('keydown', handleKeyPress);
-  }, [isOpen]);
-
-  const verifyTestimonial = async (id: number) => {
-    const success = await db.updateTestimonial(id, { verified: true });
-    if (success) {
-      const updatedTestimonials = await db.getTestimonials();
-      setTestimonials(updatedTestimonials);
-    }
-  };
-
-  const deleteTestimonial = async (id: number) => {
-    if (confirm('Are you sure you want to delete this testimonial?')) {
-      const success = await db.deleteTestimonial(id);
-      if (success) {
-        const updatedTestimonials = await db.getTestimonials();
-        setTestimonials(updatedTestimonials);
-      }
-    }
-  };
-
-  const handleGiveawayInputChange = (field: keyof GiveawayFormData, value: string) => {
-    setGiveawayFormData(prev => ({ ...prev, [field]: value }));
-  };
-
-  const handleGiveawaySubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!giveawayFormData.name || !giveawayFormData.prize || !giveawayFormData.date || !giveawayFormData.tx) {
-      alert('Please fill in all fields');
-      return;
-    }
-
-    if (editingGiveaway) {
-      const success = await db.updateGiveaway(editingGiveaway.id, giveawayFormData);
-      if (success) {
-        const updatedGiveaways = await db.getGiveaways();
-        setGiveawayWinners(updatedGiveaways);
-      }
-    } else {
-      await db.addGiveaway(giveawayFormData);
-      const updatedGiveaways = await db.getGiveaways();
-      setGiveawayWinners(updatedGiveaways);
-    }
-
-    setGiveawayFormData({ name: "", prize: "", date: "", tx: "" });
-    setEditingGiveaway(null);
-    setShowGiveawayForm(false);
-  };
-
-  const editGiveaway = (giveaway: GiveawayWinner) => {
-    setGiveawayFormData({
-      name: giveaway.name,
-      prize: giveaway.prize,
-      date: giveaway.date,
-      tx: giveaway.tx
-    });
-    setEditingGiveaway(giveaway);
-    setShowGiveawayForm(true);
-  };
-
-  const deleteGiveaway = async (id: number) => {
-    if (confirm('Are you sure you want to delete this giveaway winner?')) {
-      const success = await db.deleteGiveaway(id);
-      if (success) {
-        const updatedGiveaways = await db.getGiveaways();
-        setGiveawayWinners(updatedGiveaways);
-      }
-    }
-  };
-
-  const resetGiveawayForm = () => {
-    setGiveawayFormData({ name: "", prize: "", date: "", tx: "" });
-    setEditingGiveaway(null);
-    setShowGiveawayForm(false);
-  };
-
-  const clearAllData = async () => {
-    if (confirm('Are you sure you want to clear ALL data? This cannot be undone!')) {
-      const success = await db.clearAllData();
-      if (success) {
-        setTestimonials([]);
-        setGiveawayWinners([]);
-      }
-    }
-  };
-
-  return (
-    <>
-      <button
-        onClick={() => setIsOpen(true)}
-        className="fixed bottom-6 right-6 z-50 bg-gradient-to-r from-orange-500 to-purple-600 hover:from-orange-600 hover:to-purple-700 text-white p-4 rounded-full shadow-lg transition-all duration-300 group touch-manipulation"
-        title="Developer Admin"
-        style={{ touchAction: 'manipulation' }}
-      >
-        <Settings className="h-6 w-6" />
-        <div className="absolute -top-2 -right-2 w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
-      </button>
-
-      <AnimatePresence>
-        {isOpen && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-2 sm:p-4"
-            onClick={() => setIsOpen(false)}
-          >
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.9 }}
-              className="bg-[#1a1a1a] border border-orange-500/30 rounded-2xl w-full max-w-6xl max-h-[95vh] overflow-hidden"
-              onClick={(e) => e.stopPropagation()}
-              style={{ touchAction: 'pan-y' }}
-            >
-              <div className="flex items-center justify-between p-4 sm:p-6 border-b border-orange-500/20 bg-gradient-to-r from-orange-500/10 to-purple-600/10">
-                <div className="flex items-center gap-3">
-                  <Settings className="h-6 w-6 text-orange-400" />
-                  <div>
-                    <h2 className="text-xl sm:text-2xl font-bold">Developer Admin</h2>
-                    <p className="text-orange-400 text-xs sm:text-sm">Full control panel</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="secondary"
-                    onClick={clearAllData}
-                    className="text-red-400 border-red-400/20 hover:bg-red-400/10 text-xs sm:text-sm py-2 h-auto"
-                  >
-                    Clear All
-                  </Button>
-                  <Button
-                    variant="secondary"
-                    onClick={onLogout}
-                    className="text-red-400 border-red-400/20 hover:bg-red-400/10 text-xs sm:text-sm py-2 h-auto"
-                  >
-                    Logout
-                  </Button>
-                  <button
-                    onClick={() => setIsOpen(false)}
-                    className="p-2 hover:bg-white/10 rounded-lg transition-colors"
-                    title="Close"
-                  >
-                    <X className="h-5 w-5" />
-                  </button>
-                </div>
-              </div>
-
-              <div className="flex border-b border-white/10">
-                <button
-                  onClick={() => setActiveTab("testimonials")}
-                  className={`flex-1 py-3 sm:py-4 font-medium transition-colors text-sm sm:text-base ${
-                    activeTab === "testimonials" 
-                      ? "bg-orange-500 text-white" 
-                      : "text-white/70 hover:text-white"
-                  }`}
-                >
-                  Testimonials ({testimonials.length})
-                </button>
-                <button
-                  onClick={() => setActiveTab("giveaways")}
-                  className={`flex-1 py-3 sm:py-4 font-medium transition-colors text-sm sm:text-base ${
-                    activeTab === "giveaways" 
-                      ? "bg-orange-500 text-white" 
-                      : "text-white/70 hover:text-white"
-                  }`}
-                >
-                  Giveaways ({giveawayWinners.length})
-                </button>
-              </div>
-
-              <div className="p-3 sm:p-6 overflow-y-auto max-h-[60vh]">
-                {activeTab === "testimonials" && (
-                  <div className="space-y-3">
-                    <div className="flex justify-between items-center mb-4">
-                      <h3 className="text-lg font-semibold">Manage Testimonials</h3>
-                      <div className="text-xs sm:text-sm text-white/60">
-                        {testimonials.filter(t => t.verified).length} verified • {testimonials.filter(t => !t.verified).length} pending
-                      </div>
-                    </div>
-                    
-                    {testimonials.length === 0 ? (
-                      <div className="text-center py-8 text-white/50">
-                        <MessageCircle className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                        <p>No testimonials yet</p>
-                      </div>
-                    ) : (
-                      <div className="space-y-3">
-                        {testimonials.map((testimonial) => (
-                          <div key={testimonial.id} className="bg-white/5 rounded-lg p-3 sm:p-4 border border-white/10">
-                            <div className="flex items-start justify-between mb-2">
-                              <div className="flex-1 min-w-0">
-                                <div className="flex items-center gap-2 mb-1">
-                                  <h4 className="font-semibold text-sm sm:text-base truncate">{testimonial.name}</h4>
-                                  {testimonial.verified && (
-                                    <span className="bg-green-500/20 text-green-400 px-2 py-1 rounded-full text-xs flex-shrink-0">
-                                      Verified
-                                    </span>
-                                  )}
-                                </div>
-                                <p className="text-white/60 text-xs">{testimonial.date}</p>
-                              </div>
-                              <StarRating rating={testimonial.rating} readonly />
-                            </div>
-                            <p className="text-white/80 text-sm sm:text-base mb-3 line-clamp-3">&quot;{testimonial.message}&quot;</p>
-                            <div className="flex gap-2">
-                              {!testimonial.verified && (
-                                <Button
-                                  size="sm"
-                                  onClick={() => verifyTestimonial(testimonial.id)}
-                                  className="bg-green-500 hover:bg-green-600 text-xs py-1 h-8"
-                                >
-                                  <Check className="h-3 w-3 mr-1" />
-                                  Verify
-                                </Button>
-                              )}
-                              <Button
-                                size="sm"
-                                variant="secondary"
-                                onClick={() => deleteTestimonial(testimonial.id)}
-                                className="text-xs py-1 h-8"
-                              >
-                                <Trash2 className="h-3 w-3 mr-1" />
-                                Delete
-                              </Button>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {activeTab === "giveaways" && (
-                  <div className="space-y-3">
-                    <div className="flex justify-between items-center mb-4">
-                      <h3 className="text-lg font-semibold">Manage Giveaways</h3>
-                      <Button
-                        onClick={() => setShowGiveawayForm(true)}
-                        className="bg-orange-500 hover:bg-orange-600 text-xs sm:text-sm py-2 h-auto"
-                      >
-                        <Plus className="h-4 w-4 mr-1" />
-                        Add Winner
-                      </Button>
-                    </div>
-
-                    <AnimatePresence>
-                      {showGiveawayForm && (
-                        <motion.div
-                          initial={{ opacity: 0, height: 0 }}
-                          animate={{ opacity: 1, height: "auto" }}
-                          exit={{ opacity: 0, height: 0 }}
-                          className="bg-white/5 rounded-lg p-3 sm:p-4 border border-white/10 mb-4"
-                        >
-                          <h4 className="font-semibold mb-3 text-sm sm:text-base">
-                            {editingGiveaway ? "Edit Giveaway Winner" : "Add Giveaway Winner"}
-                          </h4>
-                          <form onSubmit={handleGiveawaySubmit} className="grid grid-cols-1 gap-3">
-                            <input
-                              type="text"
-                              placeholder="Winner Name"
-                              value={giveawayFormData.name}
-                              onChange={(e) => handleGiveawayInputChange('name', e.target.value)}
-                              className="bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white placeholder-white/50 focus:outline-none focus:border-orange-400 text-sm"
-                              required
-                            />
-                            <input
-                              type="text"
-                              placeholder="Prize (e.g., 500K $BOO)"
-                              value={giveawayFormData.prize}
-                              onChange={(e) => handleGiveawayInputChange('prize', e.target.value)}
-                              className="bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white placeholder-white/50 focus:outline-none focus:border-orange-400 text-sm"
-                              required
-                            />
-                            <input
-                              type="date"
-                              value={giveawayFormData.date}
-                              onChange={(e) => handleGiveawayInputChange('date', e.target.value)}
-                              className="bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white placeholder-white/50 focus:outline-none focus:border-orange-400 text-sm"
-                              required
-                            />
-                            <input
-                              type="text"
-                              placeholder="Transaction ID"
-                              value={giveawayFormData.tx}
-                              onChange={(e) => handleGiveawayInputChange('tx', e.target.value)}
-                              className="bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white placeholder-white/50 focus:outline-none focus:border-orange-400 text-sm"
-                              required
-                            />
-                            <div className="flex gap-2">
-                              <Button type="submit" className="bg-orange-500 hover:bg-orange-600 flex-1 text-sm py-2">
-                                {editingGiveaway ? "Update Winner" : "Add Winner"}
-                              </Button>
-                              <Button type="button" variant="secondary" onClick={resetGiveawayForm} className="flex-1 text-sm py-2">
-                                Cancel
-                              </Button>
-                            </div>
-                          </form>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-
-                    {giveawayWinners.length === 0 ? (
-                      <div className="text-center py-8 text-white/50">
-                        <Trophy className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                        <p>No giveaway winners yet</p>
-                      </div>
-                    ) : (
-                      <div className="space-y-3">
-                        {giveawayWinners.map((giveaway) => (
-                          <div key={giveaway.id} className="bg-white/5 rounded-lg p-3 sm:p-4 border border-white/10">
-                            <div className="flex items-center justify-between">
-                              <div className="flex-1 min-w-0">
-                                <h4 className="font-semibold text-sm sm:text-base truncate">{giveaway.name}</h4>
-                                <p className="text-orange-400 font-semibold text-sm sm:text-lg">{giveaway.prize}</p>
-                                <div className="flex flex-col sm:flex-row sm:gap-4 text-xs text-white/60 mt-1">
-                                  <span>{giveaway.date}</span>
-                                  <span className="truncate">{giveaway.tx}</span>
-                                </div>
-                              </div>
-                              <div className="flex gap-2 ml-2">
-                                <Button
-                                  size="sm"
-                                  variant="secondary"
-                                  onClick={() => editGiveaway(giveaway)}
-                                  className="text-xs py-1 h-8"
-                                >
-                                  <Edit className="h-3 w-3" />
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  variant="secondary"
-                                  onClick={() => deleteGiveaway(giveaway.id)}
-                                  className="text-xs py-1 h-8"
-                                >
-                                  <Trash2 className="h-3 w-3" />
-                                </Button>
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </>
-  );
-};
-
-const TestimonialCard = ({ testimonial }: { testimonial: Testimonial }) => (
-  <motion.div
-    initial={{ opacity: 0, y: 20 }}
-    whileInView={{ opacity: 1, y: 0 }}
-    viewport={{ once: true }}
-    transition={{ duration: 0.5 }}
-  >
-    <Card className="bg-black/40 border-white/10 h-full hover:bg-black/60 transition-all duration-300">
-      <CardContent className="p-4 sm:p-6">
-        <div className="flex items-start justify-between mb-3">
-          <div>
-            <div className="flex items-center gap-2">
-              <h3 className="font-bold text-white text-sm sm:text-base">{testimonial.name}</h3>
-              {testimonial.verified && (
-                <div className="flex items-center gap-1 bg-green-500/20 text-green-400 px-2 py-1 rounded-full text-xs">
-                  <Check className="h-3 w-3" />
-                  Verified
-                </div>
-              )}
-            </div>
-            <p className="text-white/60 text-xs mt-1">{testimonial.date}</p>
-          </div>
-          <StarRating rating={testimonial.rating} readonly />
-        </div>
-        <p className="text-white/80 text-sm sm:text-base leading-relaxed">&quot;{testimonial.message}&quot;</p>
-      </CardContent>
-    </Card>
-  </motion.div>
-);
-
-const Testimonials = () => {
-  const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
-  const [showForm, setShowForm] = useState(false);
-  const [formData, setFormData] = useState<TestimonialFormData>({
-    name: '',
-    message: '',
-    rating: 5
-  });
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const db = ApiDatabase.getInstance();
-
-  useEffect(() => {
-    const loadTestimonials = async () => {
-      const testimonialsData = await db.getTestimonials();
-      setTestimonials(testimonialsData);
-    };
-
-    loadTestimonials();
-
-    const unsubscribe = db.subscribe(() => {
-      loadTestimonials();
-    });
-
-    return unsubscribe;
-  }, [db]);
-
-  const handleInputChange = (field: keyof TestimonialFormData, value: string | number) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!formData.name.trim() || !formData.message.trim()) {
-      alert('Please fill in all fields');
-      return;
-    }
-
-    if (formData.message.length < 10) {
-      alert('Please write a longer message (minimum 10 characters)');
-      return;
-    }
-
-    setIsSubmitting(true);
-
-    try {
-      await db.addTestimonial({
-        name: formData.name.trim(),
-        message: formData.message.trim(),
-        rating: formData.rating,
-        date: new Date().toISOString().split('T')[0],
-        verified: false
-      });
-
-      setFormData({ name: '', message: '', rating: 5 });
-      setShowForm(false);
-      alert('Thank you for your testimonial! It will be reviewed and displayed soon.');
-    } catch (error) {
-      alert('Failed to submit testimonial. Please try again.');
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const resetForm = () => {
-    setFormData({ name: '', message: '', rating: 5 });
-    setShowForm(false);
-  };
-
-  return (
-    <Section id="testimonials" className="py-12 sm:py-16 md:py-20 lg:py-24">
-      <div className="text-center">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
-        >
-          <div className="inline-flex items-center gap-3 mb-4">
-            <MessageCircle className="h-8 w-8 text-orange-400" />
-            <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold">Community Love</h2>
-            <MessageCircle className="h-8 w-8 text-orange-400" />
-          </div>
-          <p className="text-white/70 mt-2 text-sm sm:text-base max-w-2xl mx-auto">
-            Hear what our amazing community has to say about their BOOBOY experience. Join the conversation and share your story!
-          </p>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6, delay: 0.2 }}
-          className="mt-8"
-        >
-          <Button
-            onClick={() => setShowForm(true)}
-            className="rounded-2xl bg-gradient-to-r from-orange-500 to-purple-600 hover:from-orange-600 hover:to-purple-700 text-white border-0"
-            size="lg"
-          >
-            <MessageCircle className="h-4 w-4 mr-2" />
-            Share Your Experience
-          </Button>
-        </motion.div>
-
-        <AnimatePresence>
-          {showForm && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-              onClick={() => setShowForm(false)}
-            >
-              <motion.div
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.9 }}
-                className="bg-[#1a1a1a] border border-white/10 rounded-2xl p-6 w-full max-w-md"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
-                  <MessageCircle className="h-5 w-5 text-orange-400" />
-                  Share Your BOOBOY Experience
-                </h3>
-                
-                <form onSubmit={handleSubmit} className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-white/80 mb-2">
-                      Your Name *
-                    </label>
-                    <input
-                      type="text"
-                      value={formData.name}
-                      onChange={(e) => handleInputChange('name', e.target.value)}
-                      className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/50 focus:outline-none focus:border-orange-400 transition-colors"
-                      placeholder="Enter your name"
-                      required
-                      maxLength={50}
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-white/80 mb-2">
-                      Your Rating *
-                    </label>
-                    <StarRating 
-                      rating={formData.rating} 
-                      onRatingChange={(rating) => handleInputChange('rating', rating)} 
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-white/80 mb-2">
-                      Your Message *
-                    </label>
-                    <textarea
-                      value={formData.message}
-                      onChange={(e) => handleInputChange('message', e.target.value)}
-                      className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/50 focus:outline-none focus:border-orange-400 transition-colors resize-none"
-                      placeholder="Tell us about your BOOBOY experience..."
-                      rows={4}
-                      required
-                      minLength={10}
-                      maxLength={500}
-                    />
-                    <div className="text-right text-xs text-white/50 mt-1">
-                      {formData.message.length}/500
-                    </div>
-                  </div>
-
-                  <div className="flex gap-3 pt-2">
-                    <Button
-                      type="button"
-                      variant="secondary"
-                      onClick={resetForm}
-                      className="flex-1"
-                      disabled={isSubmitting}
-                    >
-                      Cancel
-                    </Button>
-                    <Button
-                      type="submit"
-                      className="flex-1 bg-orange-500 hover:bg-orange-600"
-                      disabled={isSubmitting}
-                    >
-                      {isSubmitting ? (
-                        <>
-                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                          Submitting...
-                        </>
-                      ) : (
-                        <>
-                          <Send className="h-4 w-4 mr-2" />
-                          Submit
-                        </>
-                      )}
-                    </Button>
-                  </div>
-                </form>
-              </motion.div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6, delay: 0.4 }}
-          className="mt-12"
-        >
-          {testimonials.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 max-w-7xl mx-auto">
-              {testimonials.map((testimonial) => (
-                <TestimonialCard key={testimonial.id} testimonial={testimonial} />
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-12">
-              <MessageCircle className="h-16 w-16 text-white/30 mx-auto mb-4" />
-              <h3 className="text-xl font-semibold text-white/70 mb-2">No Testimonials Yet</h3>
-              <p className="text-white/50">Be the first to share your BOOBOY experience!</p>
-            </div>
-          )}
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6, delay: 0.6 }}
-          className="mt-12 grid grid-cols-2 lg:grid-cols-4 gap-4 max-w-2xl mx-auto"
-        >
-          <Card className="bg-black/40 border-white/10">
-            <CardContent className="p-4 text-center">
-              <div className="text-2xl font-bold text-orange-400">{testimonials.length}</div>
-              <div className="text-xs text-white/70">Total Reviews</div>
-            </CardContent>
-          </Card>
-          <Card className="bg-black/40 border-white/10">
-            <CardContent className="p-4 text-center">
-              <div className="text-2xl font-bold text-green-400">
-                {testimonials.filter(t => t.verified).length}
-              </div>
-              <div className="text-xs text-white/70">Verified</div>
-            </CardContent>
-          </Card>
-          <Card className="bg-black/40 border-white/10">
-            <CardContent className="p-4 text-center">
-              <div className="text-2xl font-bold text-yellow-400">
-                {(testimonials.reduce((acc, t) => acc + t.rating, 0) / testimonials.length || 0).toFixed(1)}
-              </div>
-              <div className="text-xs text-white/70">Avg Rating</div>
-            </CardContent>
-          </Card>
-          <Card className="bg-black/40 border-white/10">
-            <CardContent className="p-4 text-center">
-              <div className="text-2xl font-bold text-purple-400">5.0</div>
-              <div className="text-xs text-white/70">Community Score</div>
-            </CardContent>
-          </Card>
-        </motion.div>
-      </div>
-    </Section>
-  );
-};
-
-const Hero = () => {
-  return (
-    <Section id="home" className="relative py-8 sm:py-12 md:py-16 lg:py-20">
-      <div className="flex flex-col lg:flex-row items-center gap-8 lg:gap-12">
-        <motion.div 
-          className="flex-1 text-center lg:text-left"
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.7 }}
-        >
-          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black tracking-tight mb-4 sm:mb-6">
-            <span className="block" style={glow("#9efcfd")}>BOOBOY</span>
-            <span className="block text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold mt-2 text-white/80">
-              The Spookiest Meme on Solana
-            </span>
-          </h1>
-          
-          <p className="text-white/70 text-base sm:text-lg md:text-xl mb-6 sm:mb-8 max-w-2xl mx-auto lg:mx-0">
-            Join the ghostly revolution! Zero taxes, locked liquidity, and a community that&apos;s scarily dedicated to the moon.
-          </p>
-          
-          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center lg:justify-start">
-            <Button asChild size="lg" className="rounded-2xl text-base sm:text-lg h-12 sm:h-14 px-6 sm:px-8">
-              <a href={JUP_URL} target="_blank" rel="noreferrer">Buy $BOO Now</a>
-            </Button>
-            <Button asChild variant="secondary" size="lg" className="rounded-2xl text-base sm:text-lg h-12 sm:h-14 px-6 sm:px-8">
-              <a href={DEX_URL} target="_blank" rel="noreferrer">View Chart</a>
-            </Button>
-          </div>
-          
-          <div className="mt-6 sm:mt-8 flex flex-wrap gap-3 justify-center lg:justify-start">
-            <div className="flex items-center gap-2 bg-black/40 px-3 py-2 rounded-xl border border-white/10">
-              <Ghost className="h-4 w-4 text-orange-400" />
-              <span className="text-sm">No Taxes</span>
-            </div>
-            <div className="flex items-center gap-2 bg-black/40 px-3 py-2 rounded-xl border border-white/10">
-              <Trophy className="h-4 w-4 text-orange-400" />
-              <span className="text-sm">LP Locked</span>
-            </div>
-            <div className="flex items-center gap-2 bg-black/40 px-3 py-2 rounded-xl border border-white/10">
-              <Users className="h-4 w-4 text-orange-400" />
-              <span className="text-sm">Community Driven</span>
-            </div>
-          </div>
-        </motion.div>
-        
-        <motion.div 
-          className="flex-1 flex justify-center"
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.7, delay: 0.2 }}
-        >
-          <div className="relative w-full max-w-md">
-            <div className="absolute inset-0 bg-gradient-to-r from-orange-500 to-purple-600 rounded-3xl blur-lg opacity-30 animate-pulse"></div>
-            <Image 
-              src={HERO_IMAGE} 
-              alt="BOOBOY Hero" 
-              width={500}
-              height={500}
-              className="relative rounded-3xl w-full h-auto border-4 border-white/10 shadow-2xl"
-              priority
-              unoptimized
-            />
-          </div>
-        </motion.div>
-      </div>
-    </Section>
-  );
-};
-
-const About = () => {
-  return (
-    <Section id="about" className="py-12 sm:py-16 md:py-20 lg:py-24">
-      <div className="text-center max-w-4xl mx-auto">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
-        >
-          <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold mb-6">About BOOBOY</h2>
-          <p className="text-white/70 text-lg sm:text-xl leading-relaxed">
-            BOOBOY is more than just a memecoin - it&apos;s a movement! Born from the spooky spirits of Halloween 
-            and powered by the Solana blockchain, we&apos;re creating the most fun and engaging community in crypto. 
-            With zero taxes, locked liquidity, and a dedicated team, we&apos;re here to prove that memecoins can be 
-            both entertaining and trustworthy.
-          </p>
-        </motion.div>
-      </div>
-    </Section>
-  );
-};
-
-const Tokenomics = () => {
-  const stats = [
-    { label: "Total Supply", value: "1B $BOO" },
-    { label: "Taxes", value: "0%" },
-    { label: "Liquidity", value: "100% Locked" },
-    { label: "Contract", value: "Verified" }
-  ];
-
-  return (
-    <Section id="token" className="py-12 sm:py-16 md:py-20 lg:py-24">
-      <div className="text-center">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
-        >
-          <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold mb-8">Tokenomics</h2>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6, delay: 0.2 }}
-          className="grid grid-cols-2 lg:grid-cols-4 gap-4 max-w-2xl mx-auto"
-        >
-          {stats.map((stat, index) => (
-            <Card key={index} className="bg-black/40 border-white/10 hover:bg-black/60 transition-all duration-300">
-              <CardContent className="p-6 text-center">
-                <div className="text-2xl font-bold text-orange-400 mb-2">{stat.value}</div>
-                <div className="text-white/70 text-sm">{stat.label}</div>
-              </CardContent>
-            </Card>
-          ))}
-        </motion.div>
-      </div>
-    </Section>
-  );
-};
-
-const WinnerCard = ({ name, prize, date, tx }: { name: string; prize: string; date: string; tx: string }) => (
-  <motion.div
-    initial={{ opacity: 0, y: 20 }}
-    whileInView={{ opacity: 1, y: 0 }}
-    viewport={{ once: true }}
-    transition={{ duration: 0.5 }}
-  >
-    <Card className="bg-gradient-to-br from-orange-500/10 to-purple-600/10 border border-orange-500/20 hover:border-orange-500/40 transition-all duration-300 group">
-      <CardContent className="p-6">
-        <div className="flex items-start justify-between mb-4">
-          <div className="flex-1">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="w-10 h-10 bg-gradient-to-r from-orange-500 to-purple-600 rounded-full flex items-center justify-center flex-shrink-0">
-                <Trophy className="h-5 w-5 text-white" />
-              </div>
-              <div>
-                <h3 className="font-bold text-white text-lg">{name}</h3>
-                <p className="text-orange-400 font-semibold text-xl">{prize}</p>
-              </div>
-            </div>
-            
-            <div className="space-y-2 mt-4">
-              <div className="flex items-center gap-2 text-sm text-white/70">
-                <span className="font-medium">Date:</span>
-                <span>{date}</span>
-              </div>
-              <div className="flex items-center gap-2 text-sm text-white/70">
-                <span className="font-medium">Transaction:</span>
-                <span className="font-mono bg-black/30 px-2 py-1 rounded text-xs">
-                  {tx.slice(0, 8)}...{tx.slice(-8)}
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-        
-        <div className="mt-4 pt-4 border-t border-orange-500/20">
-          <div className="flex items-center justify-between text-xs text-white/50">
-            <span>Verified Winner</span>
-            <span>BOOBOY Giveaway</span>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  </motion.div>
-);
-
-const Giveaways = () => {
-  const [giveawayWinners, setGiveawayWinners] = useState<GiveawayWinner[]>([]);
-  const db = ApiDatabase.getInstance();
-
-  useEffect(() => {
-    const loadGiveaways = async () => {
-      const giveawaysData = await db.getGiveaways();
-      setGiveawayWinners(giveawaysData);
-    };
-
-    loadGiveaways();
-
-    const unsubscribe = db.subscribe(() => {
-      loadGiveaways();
-    });
-
-    return unsubscribe;
-  }, [db]);
-
-  return (
-    <Section id="giveaways" className="py-12 sm:py-16 md:py-20 lg:py-24">
-      <div className="text-center">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
-        >
-          <div className="inline-flex items-center gap-3 mb-4">
-            <Trophy className="h-8 w-8 text-orange-400" />
-            <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold">Recent Giveaways</h2>
-            <Trophy className="h-8 w-8 text-orange-400" />
-          </div>
-          <p className="text-white/70 mt-2 text-sm sm:text-base max-w-2xl mx-auto">
-            Our community members are winning big! Check out the latest BOOBOY giveaway winners.
-          </p>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6, delay: 0.1 }}
-          className="mt-8 mb-12"
-        >
-          <Card className="bg-gradient-to-r from-orange-500/20 to-purple-600/20 border border-orange-500/30">
-            <CardContent className="p-6 text-center">
-              <h3 className="text-white text-xl font-bold mb-4">🎉 Upcoming Giveaway 🎉</h3>
-              <p className="text-white/80 mb-4">
-                Join our Telegram and follow us on X (Twitter) to participate in our next massive giveaway! 
-                We&apos;re giving away <strong>FREE $BOO</strong> to our loyal community members.
-              </p>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-                <Button asChild className="bg-orange-500 hover:bg-orange-600">
-                  <a href={TG_URL} target="_blank" rel="noreferrer">
-                    Join Telegram
-                  </a>
-                </Button>
-                <Button asChild variant="secondary">
-                  <a href={X_URL} target="_blank" rel="noreferrer">
-                    Follow on X
-                  </a>
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6, delay: 0.2 }}
-          className="mt-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 max-w-7xl mx-auto"
-        >
-          {giveawayWinners.length > 0 ? (
-            giveawayWinners.map((winner) => (
-              <WinnerCard
-                key={winner.id}
-                name={winner.name}
-                prize={winner.prize}
-                date={winner.date}
-                tx={winner.tx}
-              />
-            ))
-          ) : (
-            <div className="col-span-3 text-center py-12">
-              <Trophy className="h-16 w-16 text-white/30 mx-auto mb-4" />
-              <h3 className="text-xl font-semibold text-white/70 mb-2">No Giveaways Yet</h3>
-              <p className="text-white/50">Check back later for exciting giveaway announcements!</p>
-            </div>
-          )}
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6, delay: 0.4 }}
-          className="mt-12"
-        >
-          <Button
-            asChild
-            className="rounded-2xl bg-gradient-to-r from-orange-500 to-purple-600 hover:from-orange-600 hover:to-purple-700 text-white border-0"
-            size="lg"
-          >
-            <a href={TG_URL} target="_blank" rel="noreferrer">
-              <Trophy className="h-4 w-4 mr-2" />
-              Join Giveaways
-            </a>
-          </Button>
-        </motion.div>
-      </div>
-    </Section>
-  );
-};
-
-const HowToBuy = () => {
-  const steps = [
-    {
-      step: 1,
-      title: "Get a Solana Wallet",
-      description: "Download Phantom or Solflare wallet and fund it with SOL"
-    },
-    {
-      step: 2,
-      title: "Go to Jupiter",
-      description: "Click the Buy Now button to open Jupiter Aggregator"
-    },
-    {
-      step: 3,
-      title: "Swap SOL for BOOBOY",
-      description: "Connect your wallet and swap SOL for our token"
-    },
-    {
-      step: 4,
-      title: "HODL and Enjoy",
-      description: "Join our community and enjoy the spooky ride!"
-    }
-  ];
-
-  return (
-    <Section id="howtobuy" className="py-12 sm:py-16 md:py-20 lg:py-24">
-      <div className="text-center max-w-6xl mx-auto">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
-        >
-          <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold mb-8">How to Buy $BOO</h2>
-        </motion.div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
-          {steps.map((step, index) => (
-            <motion.div
-              key={step.step}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6, delay: index * 0.1 }}
-            >
-              <Card className="bg-black/40 border-white/10 h-full hover:bg-black/60 transition-all duration-300">
-                <CardContent className="p-6 text-center">
-                  <div className="w-12 h-12 rounded-full bg-orange-500 flex items-center justify-center mx-auto mb-4 text-white font-bold text-lg">
-                    {step.step}
-                  </div>
-                  <h3 className="font-bold text-white text-lg mb-3">{step.title}</h3>
-                  <p className="text-white/70 text-sm leading-relaxed">{step.description}</p>
-                </CardContent>
-              </Card>
-            </motion.div>
-          ))}
-        </div>
-      </div>
-    </Section>
-  );
-};
-
-const Footer = () => {
-  return (
-    <footer className="border-t border-white/10 bg-black/50 py-8 sm:py-12">
-      <Section className="text-center">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
-        >
-          <div className="flex items-center justify-center gap-2 mb-4">
-            <Ghost className="h-6 w-6" />
-            <span className="font-black tracking-wider text-xl" style={{ textShadow: glow("#9efcfd").textShadow }}>
-              BOOBOY
-            </span>
-          </div>
-          
-          <p className="text-white/70 text-sm sm:text-base mb-6 max-w-2xl mx-auto">
-            The spookiest memecoin on Solana. Join our ghostly community and let&apos;s fly to the moon together!
-          </p>
-          
-          <div className="flex flex-wrap justify-center gap-4 mb-6">
-            <a href={X_URL} target="_blank" rel="noreferrer" className="text-white/70 hover:text-white transition-colors">
-              X/Twitter
-            </a>
-            <a href={TG_URL} target="_blank" rel="noreferrer" className="text-white/70 hover:text-white transition-colors">
-              Telegram
-            </a>
-            <a href={DEX_URL} target="_blank" rel="noreferrer" className="text-white/70 hover:text-white transition-colors">
-              Chart
-            </a>
-            <a href={JUP_URL} target="_blank" rel="noreferrer" className="text-white/70 hover:text-white transition-colors">
-              Buy $BOO
-            </a>
-          </div>
-          
-          <div className="text-white/50 text-xs">
-            <p>© 2024 BOOBOY. All rights reserved. Always do your own research.</p>
-            <p className="mt-2">Contract: {CA.slice(0, 8)}...{CA.slice(-8)}</p>
-          </div>
-        </motion.div>
-      </Section>
-    </footer>
-  );
-};
-
 const Nav = () => {
   const [open, setOpen] = useState(false);
   const items = [
@@ -1793,8 +122,6 @@ const Nav = () => {
     { href: "#about", label: "About" },
     { href: "#memes", label: "Memes" },
     { href: "#token", label: "Tokenomics" },
-    { href: "#giveaways", label: "Giveaways" },
-    { href: "#testimonials", label: "Testimonials" },
     { href: "#howtobuy", label: "HOW TO BUY" },
   ];
   
@@ -1806,6 +133,7 @@ const Nav = () => {
           <span className="font-black tracking-wider text-lg sm:text-xl" style={{ textShadow: glow("#9efcfd").textShadow }}>BOOBOY</span>
         </a>
         
+        {/* Desktop Navigation */}
         <nav className="hidden lg:flex items-center gap-4 xl:gap-6 text-sm">
           {items.map((it) => (
             <a key={it.href} href={it.href} className="hover:underline underline-offset-8 whitespace-nowrap">
@@ -1819,23 +147,19 @@ const Nav = () => {
             <a href={TG_URL} target="_blank" rel="noreferrer" aria-label="Telegram" className="opacity-90 hover:opacity-100 text-xs whitespace-nowrap">
               Telegram
             </a>
-            <Button variant="secondary" className="rounded-2xl text-xs h-9 px-3 sm:px-4" asChild>
-              <a href={MERCH_URL} target="_blank" rel="noreferrer">
-                <ShoppingBag className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
-                Merch
-              </a>
-            </Button>
             <Button className="rounded-2xl text-xs h-9 px-3 sm:px-4" asChild>
               <a href={JUP_URL} target="_blank" rel="noreferrer">Buy Now</a>
             </Button>
           </div>
         </nav>
 
+        {/* Mobile Navigation Button */}
         <Button variant="ghost" size="icon" className="lg:hidden h-9 w-9" onClick={() => setOpen(!open)}>
           <Menu className="h-4 w-4" />
         </Button>
       </div>
 
+      {/* Mobile Navigation Menu */}
       {open && (
         <div className="lg:hidden border-t border-white/10 bg-black/95 backdrop-blur supports-[backdrop-filter]:bg-black/80">
           <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 py-3 grid gap-3">
@@ -1848,21 +172,299 @@ const Nav = () => {
               <a href={X_URL} target="_blank" rel="noreferrer" className="hover:underline text-sm">X/Twitter</a>
               <a href={TG_URL} target="_blank" rel="noreferrer" className="hover:underline text-sm">Telegram</a>
             </div>
-            <div className="grid grid-cols-2 gap-2">
-              <Button variant="secondary" asChild className="rounded-xl">
-                <a href={MERCH_URL} target="_blank" rel="noreferrer" onClick={() => setOpen(false)}>
-                  <ShoppingBag className="h-4 w-4 mr-1" />
-                  Merch
-                </a>
-              </Button>
-              <Button asChild className="rounded-xl">
-                <a href={JUP_URL} target="_blank" rel="noreferrer" onClick={() => setOpen(false)}>Buy Now</a>
-              </Button>
-            </div>
+            <Button asChild className="rounded-xl w-full mt-2">
+              <a href={JUP_URL} target="_blank" rel="noreferrer" onClick={() => setOpen(false)}>Buy Now</a>
+            </Button>
           </div>
         </div>
       )}
     </header>
+  );
+};
+
+const Hero = () => (
+  <div id="home" className="relative overflow-hidden">
+    <div className="absolute inset-0 -z-10 [background:radial-gradient(circle_at_30%_20%,rgba(255,85,85,.25),transparent_45%),radial-gradient(circle_at_80%_0%,rgba(255,165,0,.15),transparent_35%),radial-gradient(circle_at_80%_80%,rgba(120,0,255,.15),transparent_35%)]"/>
+    <Section className="py-12 sm:py-16 md:py-20 lg:py-24">
+      <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 xl:gap-16 items-center">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }} 
+          whileInView={{ opacity: 1, y: 0 }} 
+          viewport={{ once: true }} 
+          transition={{ duration: .6 }}
+          className="text-center lg:text-left"
+        >
+          <h1 className="text-3xl xs:text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-extrabold leading-tight sm:leading-tight lg:leading-tight">
+            Halloween Vibes,{" "}
+            <span className="text-orange-400 block sm:inline" style={{ textShadow: glow("#ff7b00").textShadow }}>
+              Crypto Thrills
+            </span>
+          </h1>
+          <p className="mt-4 sm:mt-6 text-white/80 text-sm sm:text-base lg:text-lg max-w-2xl mx-auto lg:mx-0">
+            BOOBOY ($BOO) is a playful, spooky-season memecoin site. Minimal, modern, and fast—crafted for conversions and vibes.
+          </p>
+          <div className="mt-6 sm:mt-8 flex flex-col xs:flex-row gap-3 justify-center lg:justify-start">
+            <Button className="rounded-2xl text-sm sm:text-base h-11 sm:h-12 px-6 sm:px-8" asChild>
+              <a href={JUP_URL} target="_blank" rel="noreferrer">Buy Now</a>
+            </Button>
+            <Button variant="secondary" className="rounded-2xl text-sm sm:text-base h-11 sm:h-12 px-6 sm:px-8" asChild>
+              <a href={DEX_URL} target="_blank" rel="noreferrer">DEXScreener</a>
+            </Button>
+          </div>
+          <div className="mt-6 flex items-center justify-center lg:justify-start gap-4 text-sm text-white/80 flex-wrap">
+            <a href={X_URL} target="_blank" rel="noreferrer" className="underline hover:text-white transition-colors">X/Twitter</a>
+            <a href={TG_URL} target="_blank" rel="noreferrer" className="underline hover:text-white transition-colors">Telegram</a>
+          </div>
+        </motion.div>
+        
+        <motion.div 
+          initial={{ opacity: 0, scale: .95 }} 
+          whileInView={{ opacity: 1, scale: 1 }} 
+          viewport={{ once: true }} 
+          transition={{ duration: .6, delay: .1 }} 
+          className="relative order-first lg:order-last"
+        >
+          <div className="absolute -inset-2 sm:-inset-3 md:-inset-4 rounded-2xl sm:rounded-3xl blur-xl opacity-40" 
+               style={{ background: "conic-gradient(from 180deg at 50% 50%, #ff4d4d, #ffaa00, #6b21a8, #0ea5e9, #ff4d4d)" }} />
+          <div className="relative rounded-2xl sm:rounded-3xl overflow-hidden border border-white/10 shadow-2xl bg-black aspect-square max-w-md mx-auto">
+            <Image 
+              src={getHeroImage()} 
+              alt="BOOBOY artwork" 
+              width={500}
+              height={500}
+              className="w-full h-full object-cover"
+              priority
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 40vw"
+            />
+          </div>
+          <p className="text-center text-xs text-white/50 mt-3">The Ghost of Gains Past & Future</p>
+        </motion.div>
+      </div>
+    </Section>
+  </div>
+);
+
+const Stat = ({ label, value }: StatProps) => (
+  <Card className="bg-black/40 border-white/10 h-full">
+    <CardContent className="p-4 sm:p-6 text-center">
+      <div className="text-2xl sm:text-3xl md:text-4xl font-extrabold" style={{ textShadow: glow().textShadow }}>{value}</div>
+      <div className="text-xs sm:text-sm text-white/70 mt-1 sm:mt-2">{label}</div>
+    </CardContent>
+  </Card>
+);
+
+const Tokenomics = () => (
+  <Section id="token" className="py-12 sm:py-16 md:py-20 lg:py-24">
+    <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-center">Tokenomics</h2>
+    <p className="text-white/70 mt-2 text-center text-sm sm:text-base">Simple, transparent, community-focused.</p>
+    <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mt-6 sm:mt-8 max-w-4xl mx-auto">
+      <Stat label="Total Supply" value="1B"/>
+      <Stat label="Liquidity" value="Locked"/>
+      <Stat label="Tax" value="0%"/>
+      <Stat label="Chain" value="SOL"/>
+    </div>
+  </Section>
+);
+
+const About = () => (
+  <Section id="about" className="py-12 sm:py-16 md:py-20 lg:py-24">
+    <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
+      <div className="text-center lg:text-left">
+        <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold">A Whisper from the Shadows</h2>
+        <p className="text-white/80 mt-3 sm:mt-4 text-sm sm:text-base lg:text-lg">
+          From the ruins of past markets, a new presence rises on Solana—eyes blazing blue, scars of old battles etched in shadow. This Halloween,{" "}
+          <span className="font-semibold" style={{ textShadow: glow("#ff7b00").textShadow }}>BOO</span>{" "}
+          arrives with community-first governance, collectible drops, and hidden rewards. No strings. No rugs. Just a spooky surge of possibility.
+        </p>
+        <div className="mt-4 sm:mt-6 flex flex-wrap items-center gap-2 sm:gap-3 text-xs justify-center lg:justify-start">
+          <span className="font-semibold text-white/90">Contract:</span>
+          <code className="px-2 py-1 rounded bg-white/5 border border-white/10 break-all text-xs max-w-[120px] xs:max-w-[150px] sm:max-w-[200px] truncate">
+            {CA}
+          </code>
+          <CopyButton text={CA} />
+          <a href={DEX_URL} target="_blank" rel="noreferrer" className="underline inline-flex items-center gap-1 text-xs whitespace-nowrap">
+            <ExternalLink className="h-3 w-3"/>Chart
+          </a>
+        </div>
+        <div className="mt-6 flex flex-wrap gap-3 justify-center lg:justify-start">
+          <Button asChild className="rounded-xl text-sm h-10 px-4">
+            <a href="#howtobuy">How to Buy</a>
+          </Button>
+          <Button variant="secondary" asChild className="rounded-xl text-sm h-10 px-4">
+            <a href={JUP_URL} target="_blank" rel="noreferrer">Buy on Jupiter</a>
+          </Button>
+        </div>
+      </div>
+      <div className="grid grid-cols-2 gap-3 sm:gap-4">
+        <Card className="bg-black/40 border-white/10">
+          <CardContent className="p-4 sm:p-5">
+            <h3 className="font-bold text-sm sm:text-base">Clean</h3>
+            <p className="text-xs sm:text-sm text-white/70 mt-1">No clutter, just what matters.</p>
+          </CardContent>
+        </Card>
+        <Card className="bg-black/40 border-white/10">
+          <CardContent className="p-4 sm:p-5">
+            <h3 className="font-bold text-sm sm:text-base">Responsive</h3>
+            <p className="text-xs sm:text-sm text-white/70 mt-1">Filled with mysterious Halloween magic.</p>
+          </CardContent>
+        </Card>
+        <Card className="bg-black/40 border-white/10">
+          <CardContent className="p-4 sm:p-5">
+            <h3 className="font-bold text-sm sm:text-base">Fast</h3>
+            <p className="text-xs sm:text-sm text-white/70 mt-1">Quick as a midnight fright.</p>
+          </CardContent>
+        </Card>
+        <Card className="bg-black/40 border-white/10">
+          <CardContent className="p-4 sm:p-5">
+            <h3 className="font-bold text-sm sm:text-base">Themed</h3>
+            <p className="text-xs sm:text-sm text-white/70 mt-1">Spooky Halloween vibes.</p>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  </Section>
+);
+
+const HowToBuy = () => (
+  <Section id="howtobuy" className="py-12 sm:py-16 md:py-20 lg:py-24">
+    <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-center">HOW TO BUY $BOO</h2>
+    <p className="text-white/70 mt-2 text-center text-sm sm:text-base">Follow these simple steps to join the BOOBOY community</p>
+    <div className="mt-6 sm:mt-8 grid gap-4 sm:gap-6 max-w-4xl mx-auto">
+      {[ 
+        { 
+          step: "Step 1: Get a Solana Wallet",
+          instructions: "Download and set up a Solana wallet like Phantom, Solflare, or Backpack. Make sure to securely store your seed phrase!"
+        },
+        { 
+          step: "Step 2: Buy SOL",
+          instructions: "Purchase SOL cryptocurrency from any major exchange (Binance, Coinbase, etc.) or use a debit/credit card directly in your wallet to buy SOL."
+        },
+        { 
+          step: "Step 3: Go to Jupiter",
+          instructions: "Click the 'Buy Now' button on our website or go directly to Jupiter.ag. Connect your wallet when prompted."
+        },
+        { 
+          step: "Step 4: Swap SOL for BOOBOY",
+          instructions: `Set SOL as your input and paste our contract address: ${CA} as the output token. Review the swap details and confirm the transaction.`
+        },
+        { 
+          step: "Step 5: Add to Your Wallet",
+          instructions: "After purchasing, you may need to manually add BOOBOY to your wallet. Use our contract address to import the token."
+        },
+        { 
+          step: "Step 6: Join the Community",
+          instructions: "Follow us on X (Twitter) and join our Telegram to stay updated with the latest news, memes, and community events!"
+        },
+      ].map((item, i) => (
+        <Card key={i} className="bg-black/40 border-white/10">
+          <CardContent className="p-4 sm:p-6">
+            <div className="font-bold text-lg sm:text-xl mb-2 sm:mb-3" style={{ textShadow: glow("#ff7b00").textShadow }}>
+              {item.step}
+            </div>
+            <p className="text-white/70 text-sm sm:text-base">{item.instructions}</p>
+          </CardContent>
+        </Card>
+      ))}
+    </div>
+    <div className="mt-6 sm:mt-8 text-center">
+      <Button asChild className="rounded-2xl text-base sm:text-lg h-12 sm:h-14 px-6 sm:px-8">
+        <a href={JUP_URL} target="_blank" rel="noreferrer">BUY $BOO NOW ON JUPITER</a>
+      </Button>
+    </div>
+  </Section>
+);
+
+const Footer = () => (
+  <footer className="border-t border-white/10 mt-12">
+    <Section className="py-6 sm:py-8">
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-white/70">
+        <div className="text-center sm:text-left text-xs sm:text-sm">
+          © {new Date().getFullYear()} BOOBOY · {WEBSITE}
+        </div>
+        <div className="flex items-center gap-4 sm:gap-5 flex-wrap justify-center">
+          <a href={X_URL} className="hover:underline text-xs sm:text-sm" target="_blank" rel="noreferrer">X/Twitter</a>
+          <a href={TG_URL} className="hover:underline text-xs sm:text-sm" target="_blank" rel="noreferrer">Telegram</a>
+          <a href={DEX_URL} className="hover:underline text-xs sm:text-sm" target="_blank" rel="noreferrer">Chart</a>
+        </div>
+      </div>
+    </Section>
+  </footer>
+);
+
+// Meme Carousel with your 10 images
+const MemeCarousel = () => {
+  const images = STATIC_MEMES;
+  const [idx, setIdx] = useState(0);
+  const [paused, setPaused] = useState(false);
+  
+  useEffect(() => {
+    if (paused) return; 
+    const t = setInterval(() => setIdx((i) => (i + 1) % images.length), MEME_AUTOPLAY_MS); 
+    return () => clearInterval(t);
+  }, [images.length, paused]);
+
+  const go = (n: number) => setIdx((n + images.length) % images.length);
+
+  return (
+    <Section id="memes" className="py-12 sm:py-16 md:py-20 lg:py-24">
+      <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-center">BOOBOY Memes</h2>
+      <p className="text-white/70 mt-2 text-center text-sm sm:text-base">
+        Spooky memes from our haunted community - {images.length} hilarious slides!
+      </p>
+      <div className="relative mt-6 sm:mt-8" onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)}>
+        <div className="overflow-hidden rounded-xl sm:rounded-2xl lg:rounded-3xl border border-white/10 bg-black/60">
+          <div className="relative h-[280px] xs:h-[320px] sm:h-[360px] md:h-[420px] lg:h-[480px] xl:h-[520px]">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={idx}
+                initial={{ opacity: 0, x: 100 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -100 }}
+                transition={{ duration: 0.5 }}
+                className="absolute inset-0 p-3 sm:p-4"
+              >
+                <div className="h-full w-full rounded-lg sm:rounded-xl lg:rounded-2xl overflow-hidden border border-white/10 shadow-xl bg-black flex items-center justify-center">
+                  <Image 
+                    src={images[idx]} 
+                    alt={`BOOBOY meme ${idx + 1}`} 
+                    width={800}
+                    height={800}
+                    className="w-full h-full object-contain"
+                    sizes="(max-width: 640px) 100vw, (max-width: 768px) 90vw, (max-width: 1024px) 80vw, 70vw"
+                  />
+                </div>
+              </motion.div>
+            </AnimatePresence>
+          </div>
+        </div>
+        
+        {/* Controls */}
+        <div className="mt-4 flex items-center justify-between gap-3">
+          <Button variant="secondary" className="rounded-xl text-xs sm:text-sm h-9 sm:h-10 px-3 sm:px-4" onClick={() => go(idx-1)}>
+            Previous
+          </Button>
+          <div className="flex gap-1 sm:gap-2 flex-wrap justify-center">
+            {images.map((_: string, i: number) => (
+              <button 
+                key={i} 
+                onClick={() => go(i)} 
+                className={`h-2 w-2 sm:h-2.5 sm:w-2.5 rounded-full transition-all flex-shrink-0 ${
+                  i === idx ? 'bg-white scale-110' : 'bg-white/30 hover:bg-white/50'
+                }`} 
+                aria-label={`Go to slide ${i+1}`}
+              />
+            ))}
+          </div>
+          <Button variant="secondary" className="rounded-xl text-xs sm:text-sm h-9 sm:h-10 px-3 sm:px-4" onClick={() => go(idx+1)}>
+            Next
+          </Button>
+        </div>
+        
+        <p className="text-center text-xs text-white/50 mt-3">
+          Slide {idx + 1} of {images.length}
+        </p>
+      </div>
+    </Section>
   );
 };
 
@@ -1874,8 +476,6 @@ export default function App() {
       <About />
       <MemeCarousel />
       <Tokenomics />
-      <Giveaways />
-      <Testimonials />
       <Section id="buy" className="py-8 sm:py-10">
         <Card className="bg-black/40 border-white/10">
           <CardContent className="p-4 sm:p-6">
@@ -1893,12 +493,6 @@ export default function App() {
                 <Button variant="secondary" asChild className="rounded-xl text-xs sm:text-sm h-9 sm:h-10 px-3 sm:px-4">
                   <a href={DEX_URL} target="_blank" rel="noreferrer">View Chart</a>
                 </Button>
-                <Button variant="outline" asChild className="rounded-xl text-xs sm:text-sm h-9 sm:h-10 px-3 sm:px-4 border-orange-400 text-orange-400 hover:bg-orange-400 hover:text-black">
-                  <a href={MERCH_URL} target="_blank" rel="noreferrer">
-                    <ShoppingBag className="h-3 w-3 mr-1" />
-                    Merch
-                  </a>
-                </Button>
                 <CopyButton text={CA} />
               </div>
             </div>
@@ -1907,7 +501,6 @@ export default function App() {
       </Section>
       <HowToBuy />
       <Footer />
-      <DeveloperAccess />
     </main>
   );
 };
