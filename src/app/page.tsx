@@ -1608,10 +1608,10 @@ const Giveaways = () => {
         >
           <Card className="bg-gradient-to-r from-orange-500/20 to-purple-600/20 border border-orange-500/30">
             <CardContent className="p-6 text-center">
-              <h3 className="text-xl font-bold mb-4">🎉 Upcoming Giveaway 🎉</h3>
+              <h3 className="text-white text-xl font-bold mb-4">🎉 Upcoming Giveaway 🎉</h3>
               <p className="text-white/80 mb-4">
                 Join our Telegram and follow us on X (Twitter) to participate in our next massive giveaway! 
-                We&apos;re giving away <strong>2,000,000 $BOO</strong> to our loyal community members.
+                We&apos;re giving away <strong>FREE $BOO</strong> to our loyal community members.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
                 <Button asChild className="bg-orange-500 hover:bg-orange-600">
