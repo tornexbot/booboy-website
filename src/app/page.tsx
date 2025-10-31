@@ -414,11 +414,8 @@ const MemeGallery = () => {
   };
 
   // Robust Video Player Component
-  // Simplified Video Player Component
+  // Ultra Simple Video Player Component
 const VideoPlayer = ({ src, filename }: { src: string; filename: string }) => {
-  const [error, setError] = useState(false);
-  const videoRef = useRef<HTMLVideoElement>(null);
-
   // Get corresponding image for video poster
   const getPosterImage = () => {
     try {
@@ -428,45 +425,42 @@ const VideoPlayer = ({ src, filename }: { src: string; filename: string }) => {
         return STATIC_MEMES[imageIndex];
       }
     } catch {
-      console.warn('Could not find poster for video:', filename);
+      // Fallback to first image
     }
     return STATIC_MEMES[0];
   };
 
   return (
-    <div className="relative w-full h-full">
-      {error ? (
-        <div className="w-full h-full flex flex-col items-center justify-center bg-red-500/20 rounded-lg p-3">
-          <Video className="h-6 w-6 text-red-400 mb-1" />
-          <p className="text-red-400 text-xs text-center">Video unavailable</p>
-        </div>
-      ) : (
-        <div className="relative w-full h-full">
-          {/* Video Element with Poster */}
-          <video
-            ref={videoRef}
-            src={src}
-            className="w-full h-full object-cover rounded-lg"
-            muted
-            playsInline
-            preload="metadata"
-            poster={getPosterImage()}
-            onError={() => setError(true)}
-          />
-          
-          {/* Video Icon Overlay */}
-          <div className="absolute top-2 left-2 bg-black/50 rounded-full p-1 z-10">
-            <Video className="h-3 w-3 text-white" />
-          </div>
+    <div className="relative w-full h-full group">
+      {/* Always show the poster image as background */}
+      <div className="absolute inset-0">
+        <Image
+          src={getPosterImage()}
+          alt="Video thumbnail"
+          fill
+          className="object-cover rounded-lg"
+          unoptimized
+        />
+      </div>
+      
+      {/* Video Element - hidden but ready to play in modal */}
+      <video
+        src={src}
+        className="hidden"
+        preload="metadata"
+      />
+      
+      {/* Video Icon Overlay */}
+      <div className="absolute top-2 left-2 bg-black/50 rounded-full p-1 z-10">
+        <Video className="h-3 w-3 text-white" />
+      </div>
 
-          {/* Hover Play Button */}
-          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all duration-300 flex items-center justify-center opacity-0 group-hover:opacity-100">
-            <div className="bg-black/50 rounded-full p-3 transform scale-75 group-hover:scale-100 transition-transform duration-300">
-              <Video className="h-6 w-6 text-white" />
-            </div>
-          </div>
+      {/* Hover Play Button */}
+      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-all duration-300 flex items-center justify-center">
+        <div className="bg-black/50 rounded-full p-3">
+          <Video className="h-6 w-6 text-white" />
         </div>
-      )}
+      </div>
     </div>
   );
 };
