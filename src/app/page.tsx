@@ -414,10 +414,16 @@ const MemeGallery = () => {
   };
 
   // Robust Video Player Component
-  // Ultra Simple Video Player Component
-const VideoPlayer = ({ src, filename }: { src: string; filename: string }) => {
-  // Get corresponding image for video poster
-  const getPosterImage = () => {
+  const VideoPlayer = ({ src, filename }: { src: string; filename: string }) => {
+  const [videoReady, setVideoReady] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [attempts, setAttempts] = useState(0);
+  const maxAttempts = 2;
+
+  // Fallback to image if video fails
+  const getFallbackImage = () => {
     try {
       const videoNum = filename.replace('video-', '').replace('.mp4', '');
       const imageIndex = parseInt(videoNum) - 1;
@@ -430,37 +436,163 @@ const VideoPlayer = ({ src, filename }: { src: string; filename: string }) => {
     return STATIC_MEMES[0];
   };
 
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    const handleLoadedData = () => {
+      console.log('Video loaded successfully:', src);
+      setVideoReady(true);
+      setLoading(false);
+      setError(false);
+    };
+
+    const handleCanPlay = () => {
+      console.log('Video can play:', src);
+      setVideoReady(true);
+      setLoading(false);
+    };
+
+    const handleError = (e: Event) => {
+      console.error('Video loading error:', src, e);
+      setLoading(false);
+      
+      if (attempts < maxAttempts) {
+        // Retry loading
+        setTimeout(() => {
+          console.log(`Retrying video load (attempt ${attempts + 1}):`, src);
+          setAttempts(prev => prev + 1);
+          video.load(); // Reload the video
+        }, 1000);
+      } else {
+        // Final failure
+        setError(true);
+        setVideoReady(false);
+      }
+    };
+
+    const handleStalled = () => {
+      console.warn('Video stalled:', src);
+      // Don't mark as error immediately, wait for error event
+    };
+
+    const handleLoadStart = () => {
+      console.log('Video load started:', src);
+      setLoading(true);
+    };
+
+    // Set up event listeners
+    video.addEventListener('loadeddata', handleLoadedData);
+    video.addEventListener('canplay', handleCanPlay);
+    video.addEventListener('error', handleError);
+    video.addEventListener('stalled', handleStalled);
+    video.addEventListener('loadstart', handleLoadStart);
+
+    // Configure video for optimal thumbnail loading
+    video.muted = true;
+    video.playsInline = true;
+    video.preload = 'metadata';
+    video.crossOrigin = 'anonymous'; // Important for CORS
+    
+    // Set source with cache busting on retry
+    const cacheBuster = attempts > 0 ? `?attempt=${attempts}&t=${Date.now()}` : '';
+    video.src = src + cacheBuster;
+
+    // Force load
+    video.load();
+
+    // Safety timeout - if video doesn't load in 5 seconds, show fallback
+    const timeoutId = setTimeout(() => {
+      if (!videoReady && !error) {
+        console.warn('Video loading timeout:', src);
+        setError(true);
+        setLoading(false);
+      }
+    }, 5000);
+
+    return () => {
+      video.removeEventListener('loadeddata', handleLoadedData);
+      video.removeEventListener('canplay', handleCanPlay);
+      video.removeEventListener('error', handleError);
+      video.removeEventListener('stalled', handleStalled);
+      video.removeEventListener('loadstart', handleLoadStart);
+      clearTimeout(timeoutId);
+    };
+  }, [src, attempts, maxAttempts, videoReady, error]); // Added missing dependencies
+
   return (
     <div className="relative w-full h-full group">
-      {/* Always show the poster image as background */}
-      <div className="absolute inset-0">
-        <Image
-          src={getPosterImage()}
-          alt="Video thumbnail"
-          fill
-          className="object-cover rounded-lg"
-          unoptimized
-        />
-      </div>
-      
-      {/* Video Element - hidden but ready to play in modal */}
-      <video
-        src={src}
-        className="hidden"
-        preload="metadata"
-      />
-      
-      {/* Video Icon Overlay */}
-      <div className="absolute top-2 left-2 bg-black/50 rounded-full p-1 z-10">
-        <Video className="h-3 w-3 text-white" />
-      </div>
-
-      {/* Hover Play Button */}
-      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-all duration-300 flex items-center justify-center">
-        <div className="bg-black/50 rounded-full p-3">
-          <Video className="h-6 w-6 text-white" />
+      {/* Loading State */}
+      {loading && !error && (
+        <div className="absolute inset-0 flex items-center justify-center bg-gray-800 rounded-lg z-10">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-orange-500 mx-auto mb-1"></div>
+            <p className="text-white/60 text-xs">Loading video...</p>
+          </div>
         </div>
-      </div>
+      )}
+
+      {/* Error State - Show Fallback Image */}
+      {error && (
+        <div className="relative w-full h-full">
+          <Image
+            src={getFallbackImage()}
+            alt="Video thumbnail"
+            fill
+            className="object-cover rounded-lg"
+            unoptimized
+          />
+          <div className="absolute top-2 left-2 bg-black/50 rounded-full p-1">
+            <Video className="h-3 w-3 text-white" />
+          </div>
+          <div className="absolute bottom-2 right-2 bg-red-500/80 text-white text-xs px-2 py-1 rounded">
+            Video unavailable
+          </div>
+        </div>
+      )}
+
+      {/* Video Thumbnail - Show when ready */}
+      {!error && (
+        <div className="relative w-full h-full">
+          <video
+            ref={videoRef}
+            className={`w-full h-full object-cover rounded-lg transition-opacity duration-300 ${
+              videoReady ? 'opacity-100' : 'opacity-0'
+            }`}
+            muted
+            playsInline
+            preload="metadata"
+            crossOrigin="anonymous"
+            onError={() => {}} // Handled in useEffect
+          />
+          
+          {/* Video Icon Overlay */}
+          <div className="absolute top-2 left-2 bg-black/50 rounded-full p-1">
+            <Video className="h-3 w-3 text-white" />
+          </div>
+
+          {/* Loading progress indicator */}
+          {!videoReady && !loading && !error && (
+            <div className="absolute inset-0 flex items-center justify-center bg-black/40 rounded-lg">
+              <div className="text-center">
+                <div className="animate-pulse">
+                  <Video className="h-6 w-6 text-white/70 mx-auto mb-1" />
+                </div>
+                <p className="text-white/60 text-xs">Preparing video...</p>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Hover Play Button - Only show when video is ready */}
+      {videoReady && !error && (
+        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all duration-300 flex items-center justify-center opacity-0 group-hover:opacity-100">
+          <div className="bg-black/50 rounded-full p-3 transform scale-75 group-hover:scale-100 transition-transform duration-300">
+            <Video className="h-6 w-6 text-white" />
+          </div>
+        </div>
+      )}
     </div>
   );
 };
