@@ -24,7 +24,7 @@ const STATIC_MEMES = Array.from({ length: 29 }, (_, i) => `/images/${i + 1}.jpg`
 // Replace your current VIDEO_MEMES array with this:
 // Video memes - using GitHub raw URLs with CORS proxy
 const VIDEO_MEMES = [
-  "https://raw.githubusercontent.com/tornexbot/booboy-videos/main/1.mp4",
+  "https://booboycdn.b-cdn.net/1.mp4",
   "https://corsproxy.io/?https://raw.githubusercontent.com/tornexbot/booboy-videos/main/2.mp4", 
   "https://corsproxy.io/?https://raw.githubusercontent.com/tornexbot/booboy-videos/main/3.mp4",
   "https://corsproxy.io/?https://raw.githubusercontent.com/tornexbot/booboy-videos/main/4.mp4",
@@ -367,21 +367,7 @@ const MemeGallery = () => {
   // Updated to support 29 images in public folder
   const STATIC_MEMES = Array.from({ length: 29 }, (_, i) => `/images/${i + 1}.jpg`);
 
-  const VIDEO_MEMES = [
-    "/videos/1.mp4",
-    "/videos/2.mp4", 
-    "/videos/3.mp4",
-    "/videos/4.mp4",
-    "/videos/5.mp4",
-    "/videos/6.mp4",
-    "/videos/7.mp4",
-    "/videos/8.mp4",
-    "/videos/9.mp4",
-    "/videos/10.mp4",
-    "/videos/11.mp4",
-    "/videos/12.mp4",
-    "/videos/13.mp4"
-  ];
+
 
   const allMedia = [
     ...STATIC_MEMES.map((src, index) => ({ 
