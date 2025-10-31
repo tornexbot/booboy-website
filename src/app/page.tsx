@@ -24,7 +24,7 @@ const STATIC_MEMES = Array.from({ length: 29 }, (_, i) => `/images/${i + 1}.jpg`
 // Replace your current VIDEO_MEMES array with this:
 // Video memes - using GitHub raw URLs with CORS proxy
 const VIDEO_MEMES = [
-  "https://corsproxy.io/?https://raw.githubusercontent.com/tornexbot/booboy-videos/main/1.mp4",
+  "https://raw.githubusercontent.com/tornexbot/booboy-videos/main/1.mp4",
   "https://corsproxy.io/?https://raw.githubusercontent.com/tornexbot/booboy-videos/main/2.mp4", 
   "https://corsproxy.io/?https://raw.githubusercontent.com/tornexbot/booboy-videos/main/3.mp4",
   "https://corsproxy.io/?https://raw.githubusercontent.com/tornexbot/booboy-videos/main/4.mp4",
