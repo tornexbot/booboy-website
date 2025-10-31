@@ -371,6 +371,10 @@ const StarRating = ({ rating, onRatingChange, readonly = false }: { rating: numb
 // MEME GALLERY COMPONENT
 // =============================================
 
+// =============================================
+// MEME GALLERY COMPONENT (ROBUST VERSION)
+// =============================================
+
 const MemeGallery = () => {
   const [selectedType, setSelectedType] = useState<"all" | "images" | "videos">("all");
   const [selectedMedia, setSelectedMedia] = useState<string | null>(null);
@@ -408,6 +412,133 @@ const MemeGallery = () => {
     setIsModalOpen(false);
     setSelectedMedia(null);
   };
+
+  // Robust Video Player Component
+  const VideoPlayer = ({ src, filename }: { src: string; filename: string }) => {
+  const [error, setError] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [showPoster, setShowPoster] = useState(true);
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  // Get corresponding image for video poster (image-1.jpg for video-1.mp4)
+  const getPosterImage = () => {
+    try {
+      const videoNum = filename.replace('video-', '').replace('.mp4', '');
+      const imageIndex = parseInt(videoNum) - 1;
+      if (imageIndex >= 0 && imageIndex < STATIC_MEMES.length) {
+        return STATIC_MEMES[imageIndex];
+      }
+    } catch {
+      console.warn('Could not find poster for video:', filename);
+    }
+    // Fallback to first image
+    return STATIC_MEMES[0];
+  };
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    const handleCanPlay = () => {
+      setLoading(false);
+      // Keep poster visible for a moment after video loads
+      setTimeout(() => setShowPoster(false), 500);
+    };
+
+    const handleError = () => {
+      setError(true);
+      setLoading(false);
+    };
+
+    const handleLoadStart = () => {
+      setLoading(true);
+    };
+
+    video.addEventListener('canplay', handleCanPlay);
+    video.addEventListener('error', handleError);
+    video.addEventListener('loadstart', handleLoadStart);
+
+    return () => {
+      video.removeEventListener('canplay', handleCanPlay);
+      video.removeEventListener('error', handleError);
+      video.removeEventListener('loadstart', handleLoadStart);
+    };
+  }, [src]);
+
+  return (
+    <div className="relative w-full h-full">
+      {/* Loading Spinner */}
+      {loading && (
+        <div className="absolute inset-0 flex items-center justify-center bg-gray-800 rounded-lg z-20">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-orange-500 mx-auto mb-2"></div>
+            <p className="text-white/60 text-xs">Loading...</p>
+          </div>
+        </div>
+      )}
+
+      {/* Error State */}
+      {error ? (
+        <div className="w-full h-full flex flex-col items-center justify-center bg-red-500/20 rounded-lg p-3">
+          <Video className="h-6 w-6 text-red-400 mb-1" />
+          <p className="text-red-400 text-xs text-center">Video unavailable</p>
+          <p className="text-red-300 text-xs mt-1">{filename}</p>
+        </div>
+      ) : (
+        <div className="relative w-full h-full">
+          {/* Video Poster (shows before video loads and on hover) */}
+          {(showPoster || loading) && (
+            <div className="absolute inset-0 z-10">
+              <Image
+                src={getPosterImage()}
+                alt="Video thumbnail"
+                fill
+                className="object-cover rounded-lg"
+                unoptimized
+              />
+              <div className="absolute inset-0 bg-black/30 rounded-lg flex items-center justify-center">
+                <div className="bg-black/50 rounded-full p-2">
+                  <Video className="h-5 w-5 text-white" />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Video Element */}
+          <video
+            ref={videoRef}
+            src={src}
+            className="w-full h-full object-cover rounded-lg"
+            muted
+            playsInline
+            preload="metadata"
+            disablePictureInPicture
+            disableRemotePlayback
+            style={{ 
+              WebkitTouchCallout: 'none',
+              WebkitUserSelect: 'none',
+              MozUserSelect: 'none',
+              msUserSelect: 'none',
+              userSelect: 'none'
+            }}
+          />
+          
+          {/* Video Icon Overlay */}
+          <div className="absolute top-2 left-2 bg-black/50 rounded-full p-1 z-10">
+            <Video className="h-3 w-3 text-white" />
+          </div>
+
+          {/* Hover Play Button */}
+          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all duration-300 flex items-center justify-center opacity-0 group-hover:opacity-100">
+            <div className="bg-black/50 rounded-full p-3 transform scale-75 group-hover:scale-100 transition-transform duration-300">
+              <Video className="h-6 w-6 text-white" />
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
 
   return (
     <Section id="gallery" className="py-12 sm:py-16 md:py-20 lg:py-24">
@@ -502,23 +633,7 @@ const MemeGallery = () => {
                       </div>
                     </div>
                   ) : (
-                    <div className="relative w-full h-full">
-                      <video
-                        src={media.src}
-                        className="w-full h-full object-cover rounded-lg"
-                        muted
-                        preload="metadata"
-                        playsInline
-                      />
-                      <div className="absolute top-2 left-2 bg-black/50 rounded-full p-1">
-                        <Video className="h-3 w-3 text-white" />
-                      </div>
-                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all duration-300 flex items-center justify-center">
-                        <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-black/50 rounded-full p-3">
-                          <Video className="h-6 w-6 text-white" />
-                        </div>
-                      </div>
-                    </div>
+                    <VideoPlayer src={media.src} filename={media.filename} />
                   )}
                 </CardContent>
               </Card>
@@ -558,6 +673,7 @@ const MemeGallery = () => {
                     autoPlay
                     loop
                     playsInline
+                    muted
                   />
                 ) : (
                   <Image
