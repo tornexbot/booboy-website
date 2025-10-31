@@ -25,18 +25,18 @@ const STATIC_MEMES = Array.from({ length: 29 }, (_, i) => `/images/${i + 1}.jpg`
 // Video memes - using GitHub raw URLs with CORS proxy
 const VIDEO_MEMES = [
   "https://booboycdn.b-cdn.net/1.mp4",
-  "https://corsproxy.io/?https://raw.githubusercontent.com/tornexbot/booboy-videos/main/2.mp4", 
-  "https://corsproxy.io/?https://raw.githubusercontent.com/tornexbot/booboy-videos/main/3.mp4",
-  "https://corsproxy.io/?https://raw.githubusercontent.com/tornexbot/booboy-videos/main/4.mp4",
-  "https://corsproxy.io/?https://raw.githubusercontent.com/tornexbot/booboy-videos/main/5.mp4",
-  "https://corsproxy.io/?https://raw.githubusercontent.com/tornexbot/booboy-videos/main/6.mp4",
-  "https://corsproxy.io/?https://raw.githubusercontent.com/tornexbot/booboy-videos/main/7.mp4",
-  "https://corsproxy.io/?https://raw.githubusercontent.com/tornexbot/booboy-videos/main/8.mp4",
-  "https://corsproxy.io/?https://raw.githubusercontent.com/tornexbot/booboy-videos/main/9.mp4",
-  "https://corsproxy.io/?https://raw.githubusercontent.com/tornexbot/booboy-videos/main/10.mp4",
-  "https://corsproxy.io/?https://raw.githubusercontent.com/tornexbot/booboy-videos/main/11.mp4",
-  "https://corsproxy.io/?https://raw.githubusercontent.com/tornexbot/booboy-videos/main/12.mp4",
-  "https://corsproxy.io/?https://raw.githubusercontent.com/tornexbot/booboy-videos/main/13.mp4"
+  "https://booboycdn.b-cdn.net/2.MP4", 
+  "https://booboycdn.b-cdn.net/3.MP4",
+  "https://booboycdn.b-cdn.net/4.MP4",
+  "https://booboycdn.b-cdn.net/5.MP4",
+  "https://booboycdn.b-cdn.net/6.MP4",
+  "https://booboycdn.b-cdn.net/7.MP4",
+  "https://booboycdn.b-cdn.net/8.MP4",
+  "https://booboycdn.b-cdn.net/9.MP4",
+  "https://booboycdn.b-cdn.net/10.MP4",
+  "https://booboycdn.b-cdn.net/11.MP4",
+  "https://booboycdn.b-cdn.net/12.MP4",
+  "https://booboycdn.b-cdn.net/13.MP4"
 ];
 
 const HERO_IMAGE = "https://i.ibb.co/tPHdjHZd/photo-2025-10-18-22-56-34.jpg";
