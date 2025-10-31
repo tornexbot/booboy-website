@@ -21,8 +21,7 @@ const DEVELOPER_ACCESS_KEY = "booboy2025";
 // Updated to support 29 images in public folder
 const STATIC_MEMES = Array.from({ length: 29 }, (_, i) => `/images/${i + 1}.jpg`);
 
-// Replace your current VIDEO_MEMES array with this:
-// Video memes - using GitHub raw URLs with CORS proxy
+// Video memes - using external CDN
 const VIDEO_MEMES = [
   "https://booboycdn.b-cdn.net/1.mp4",
   "https://booboycdn.b-cdn.net/2.MP4", 
@@ -53,8 +52,9 @@ interface CopyButtonProps {
   text: string;
 }
 
+// Updated interfaces for Firebase (string IDs)
 interface Testimonial {
-  id: number;
+  id: string;  // Changed to string for Firebase
   name: string;
   message: string;
   rating: number;
@@ -69,7 +69,7 @@ interface TestimonialFormData {
 }
 
 interface GiveawayWinner {
-  id: number;
+  id: string;  // Changed to string for Firebase
   name: string;
   prize: string;
   date: string;
@@ -92,18 +92,31 @@ interface MediaItem {
 }
 
 // =============================================
-// API DATABASE SOLUTION
+// FIREBASE DATABASE SOLUTION
 // =============================================
 
-class ApiDatabase {
-  private static instance: ApiDatabase;
+import { 
+  collection, 
+  addDoc, 
+  getDocs, 
+  updateDoc, 
+  deleteDoc, 
+  doc,
+  query,
+  orderBy,
+  Timestamp 
+} from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+
+class FirebaseDatabase {
+  private static instance: FirebaseDatabase;
   private listeners: (() => void)[] = [];
 
-  static getInstance(): ApiDatabase {
-    if (!ApiDatabase.instance) {
-      ApiDatabase.instance = new ApiDatabase();
+  static getInstance(): FirebaseDatabase {
+    if (!FirebaseDatabase.instance) {
+      FirebaseDatabase.instance = new FirebaseDatabase();
     }
-    return ApiDatabase.instance;
+    return FirebaseDatabase.instance;
   }
 
   private notifyListeners() {
@@ -119,11 +132,24 @@ class ApiDatabase {
 
   async getTestimonials(): Promise<Testimonial[]> {
     try {
-      const response = await fetch('/api/testimonials', {
-        cache: 'no-store'
+      const testimonialsRef = collection(db, 'testimonials');
+      const q = query(testimonialsRef, orderBy('date', 'desc'));
+      const querySnapshot = await getDocs(q);
+      
+      const testimonials: Testimonial[] = [];
+      querySnapshot.forEach((doc) => {
+        const data = doc.data();
+        testimonials.push({
+          id: doc.id,
+          name: data.name,
+          message: data.message,
+          rating: data.rating,
+          date: data.date,
+          verified: data.verified || false
+        });
       });
-      if (!response.ok) throw new Error('Failed to fetch testimonials');
-      return await response.json();
+      
+      return testimonials;
     } catch (error) {
       console.error('Error fetching testimonials:', error);
       return [];
@@ -132,17 +158,16 @@ class ApiDatabase {
 
   async addTestimonial(testimonial: Omit<Testimonial, 'id'>): Promise<Testimonial> {
     try {
-      const response = await fetch('/api/testimonials', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(testimonial),
+      const docRef = await addDoc(collection(db, 'testimonials'), {
+        ...testimonial,
+        createdAt: Timestamp.now()
       });
       
-      if (!response.ok) throw new Error('Failed to add testimonial');
+      const newTestimonial = {
+        id: docRef.id,
+        ...testimonial
+      };
       
-      const newTestimonial = await response.json();
       this.notifyListeners();
       return newTestimonial;
     } catch (error) {
@@ -151,18 +176,10 @@ class ApiDatabase {
     }
   }
 
-  async updateTestimonial(id: number, updates: Partial<Testimonial>): Promise<boolean> {
+  async updateTestimonial(id: string, updates: Partial<Testimonial>): Promise<boolean> {
     try {
-      const response = await fetch(`/api/testimonials/${id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(updates),
-      });
-      
-      if (!response.ok) throw new Error('Failed to update testimonial');
-      
+      const testimonialRef = doc(db, 'testimonials', id);
+      await updateDoc(testimonialRef, updates);
       this.notifyListeners();
       return true;
     } catch (error) {
@@ -171,14 +188,9 @@ class ApiDatabase {
     }
   }
 
-  async deleteTestimonial(id: number): Promise<boolean> {
+  async deleteTestimonial(id: string): Promise<boolean> {
     try {
-      const response = await fetch(`/api/testimonials/${id}`, {
-        method: 'DELETE',
-      });
-      
-      if (!response.ok) throw new Error('Failed to delete testimonial');
-      
+      await deleteDoc(doc(db, 'testimonials', id));
       this.notifyListeners();
       return true;
     } catch (error) {
@@ -189,11 +201,23 @@ class ApiDatabase {
 
   async getGiveaways(): Promise<GiveawayWinner[]> {
     try {
-      const response = await fetch('/api/giveaways', {
-        cache: 'no-store'
+      const giveawaysRef = collection(db, 'giveaways');
+      const q = query(giveawaysRef, orderBy('date', 'desc'));
+      const querySnapshot = await getDocs(q);
+      
+      const giveaways: GiveawayWinner[] = [];
+      querySnapshot.forEach((doc) => {
+        const data = doc.data();
+        giveaways.push({
+          id: doc.id,
+          name: data.name,
+          prize: data.prize,
+          date: data.date,
+          tx: data.tx
+        });
       });
-      if (!response.ok) throw new Error('Failed to fetch giveaways');
-      return await response.json();
+      
+      return giveaways;
     } catch (error) {
       console.error('Error fetching giveaways:', error);
       return [];
@@ -202,17 +226,16 @@ class ApiDatabase {
 
   async addGiveaway(giveaway: Omit<GiveawayWinner, 'id'>): Promise<GiveawayWinner> {
     try {
-      const response = await fetch('/api/giveaways', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(giveaway),
+      const docRef = await addDoc(collection(db, 'giveaways'), {
+        ...giveaway,
+        createdAt: Timestamp.now()
       });
       
-      if (!response.ok) throw new Error('Failed to add giveaway');
+      const newGiveaway = {
+        id: docRef.id,
+        ...giveaway
+      };
       
-      const newGiveaway = await response.json();
       this.notifyListeners();
       return newGiveaway;
     } catch (error) {
@@ -221,18 +244,10 @@ class ApiDatabase {
     }
   }
 
-  async updateGiveaway(id: number, updates: Partial<GiveawayWinner>): Promise<boolean> {
+  async updateGiveaway(id: string, updates: Partial<GiveawayWinner>): Promise<boolean> {
     try {
-      const response = await fetch(`/api/giveaways/${id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(updates),
-      });
-      
-      if (!response.ok) throw new Error('Failed to update giveaway');
-      
+      const giveawayRef = doc(db, 'giveaways', id);
+      await updateDoc(giveawayRef, updates);
       this.notifyListeners();
       return true;
     } catch (error) {
@@ -241,14 +256,9 @@ class ApiDatabase {
     }
   }
 
-  async deleteGiveaway(id: number): Promise<boolean> {
+  async deleteGiveaway(id: string): Promise<boolean> {
     try {
-      const response = await fetch(`/api/giveaways/${id}`, {
-        method: 'DELETE',
-      });
-      
-      if (!response.ok) throw new Error('Failed to delete giveaway');
-      
+      await deleteDoc(doc(db, 'giveaways', id));
       this.notifyListeners();
       return true;
     } catch (error) {
@@ -257,9 +267,9 @@ class ApiDatabase {
     }
   }
 
-  // Simplified media methods - using static files only
+  // Media methods remain the same (static files)
   async getMedia(): Promise<MediaItem[]> {
-    return []; // Return empty array since we're using static files
+    return [];
   }
 
   async uploadMedia(): Promise<MediaItem> {
@@ -267,20 +277,19 @@ class ApiDatabase {
   }
 
   async deleteMedia(): Promise<boolean> {
-    return false; // Media deletion disabled
+    return false;
   }
 
   async clearAllData(): Promise<boolean> {
     try {
-      const testimonials = await this.getTestimonials();
-      const giveaways = await this.getGiveaways();
-      
       // Delete all testimonials
+      const testimonials = await this.getTestimonials();
       for (const testimonial of testimonials) {
         await this.deleteTestimonial(testimonial.id);
       }
       
       // Delete all giveaways
+      const giveaways = await this.getGiveaways();
       for (const giveaway of giveaways) {
         await this.deleteGiveaway(giveaway.id);
       }
@@ -292,6 +301,9 @@ class ApiDatabase {
     }
   }
 }
+
+// Replace the old ApiDatabase with FirebaseDatabase
+const ApiDatabase = FirebaseDatabase;
 
 const Section = ({ id, children, className = "" }: SectionProps) => (
   <section id={id} className={`w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 ${className}`}>
@@ -363,11 +375,6 @@ const MemeGallery = () => {
   const [selectedType, setSelectedType] = useState<"all" | "images" | "videos">("all");
   const [selectedMedia, setSelectedMedia] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-
-  // Updated to support 29 images in public folder
-  const STATIC_MEMES = Array.from({ length: 29 }, (_, i) => `/images/${i + 1}.jpg`);
-
-
 
   const allMedia = [
     ...STATIC_MEMES.map((src, index) => ({ 
@@ -543,7 +550,7 @@ const MemeGallery = () => {
                   <X className="h-6 w-6" />
                 </button>
                 
-                {selectedMedia.endsWith('.mp4') ? (
+                {selectedMedia.endsWith('.mp4') || selectedMedia.endsWith('.MP4') ? (
                   <video
                     src={selectedMedia}
                     className="w-full h-auto max-h-[80vh] rounded-2xl"
@@ -872,7 +879,8 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
     return () => window.removeEventListener('keydown', handleKeyPress);
   }, [isOpen]);
 
-  const verifyTestimonial = async (id: number) => {
+  // Updated to use string IDs
+  const verifyTestimonial = async (id: string) => {
     const success = await db.updateTestimonial(id, { verified: true });
     if (success) {
       const updatedTestimonials = await db.getTestimonials();
@@ -880,7 +888,7 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
     }
   };
 
-  const deleteTestimonial = async (id: number) => {
+  const deleteTestimonial = async (id: string) => {
     if (confirm('Are you sure you want to delete this testimonial?')) {
       const success = await db.deleteTestimonial(id);
       if (success) {
@@ -930,7 +938,7 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
     setShowGiveawayForm(true);
   };
 
-  const deleteGiveaway = async (id: number) => {
+  const deleteGiveaway = async (id: string) => {
     if (confirm('Are you sure you want to delete this giveaway winner?')) {
       const success = await db.deleteGiveaway(id);
       if (success) {
@@ -1301,6 +1309,7 @@ const Testimonials = () => {
     rating: 5
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   const db = ApiDatabase.getInstance();
 
@@ -1325,14 +1334,15 @@ const Testimonials = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setSubmitError(null);
     
     if (!formData.name.trim() || !formData.message.trim()) {
-      alert('Please fill in all fields');
+      setSubmitError('Please fill in all fields');
       return;
     }
 
     if (formData.message.length < 10) {
-      alert('Please write a longer message (minimum 10 characters)');
+      setSubmitError('Please write a longer message (minimum 10 characters)');
       return;
     }
 
@@ -1349,9 +1359,11 @@ const Testimonials = () => {
 
       setFormData({ name: '', message: '', rating: 5 });
       setShowForm(false);
+      setSubmitError(null);
       alert('Thank you for your testimonial! It will be reviewed and displayed soon.');
-    } catch {
-      alert('Failed to submit testimonial. Please try again.');
+    } catch (error: unknown) {
+      console.error('Testimonial submission error:', error);
+      setSubmitError(`Failed to submit testimonial: ${error instanceof Error ? error.message : 'Please try again later'}`);
     } finally {
       setIsSubmitting(false);
     }
@@ -1360,6 +1372,7 @@ const Testimonials = () => {
   const resetForm = () => {
     setFormData({ name: '', message: '', rating: 5 });
     setShowForm(false);
+    setSubmitError(null);
   };
 
   return (
@@ -1418,6 +1431,12 @@ const Testimonials = () => {
                   <MessageCircle className="h-5 w-5 text-orange-400" />
                   Share Your BOOBOY Experience
                 </h3>
+                
+                {submitError && (
+                  <div className="mb-4 p-3 bg-red-500/20 border border-red-500/30 rounded-lg">
+                    <p className="text-red-400 text-sm">{submitError}</p>
+                  </div>
+                )}
                 
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <div>
@@ -1800,7 +1819,7 @@ const Giveaways = () => {
                 Join our Telegram and follow us on X (Twitter) to participate in our next massive giveaway! 
                 We&apos;re giving away <strong>FREE $BOO</strong> to our loyal community members.
               </p>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+              <div className="flex flex-col sm:flexRow gap-4 justify-center items-center">
                 <Button asChild className="bg-orange-500 hover:bg-orange-600">
                   <a href={TG_URL} target="_blank" rel="noreferrer">
                     Join Telegram
